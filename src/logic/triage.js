@@ -5,7 +5,6 @@ export const BODY_PARTS = [
   { id: 'shoulder', label: 'Shoulder' },
   { id: 'hamstring', label: 'Hamstring', sub: 'Back of the thigh' },
   { id: 'wrist', label: 'Wrist' },
-  { id: 'head', label: 'Head', sub: 'Any hit to the head' },
   { id: 'other', label: 'Somewhere else' },
 ]
 

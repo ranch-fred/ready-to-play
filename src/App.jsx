@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { rules, redFlagsFor, isTriggered, scoreSelfTests, buildOutcome, worstAction } from './logic/triage'
 import { loadState, saveState } from './logic/storage'
 import { Intro } from './screens/Intro'
-import { PickPart, PickSide, PickLocation, RedFlag, SelfTest, HeadInjury } from './screens/Triage'
+import { PickPart, PickSide, PickLocation, RedFlag, SelfTest } from './screens/Triage'
 import { Result } from './screens/Result'
 import { Profile } from './screens/Profile'
 import { Home } from './screens/Home'
@@ -49,7 +49,6 @@ export default function App() {
         <PickPart
           onBack={back}
           onPick={(id) => {
-            if (id === 'head') return go({ screen: 'head', partId: 'head' })
             if (id === 'other') return go({ screen: 'flag', partId: 'other', flagIndex: 0 })
             go({ screen: 'side', partId: id })
           }}
@@ -113,16 +112,6 @@ export default function App() {
         />
       )
     }
-
-    case 'head':
-      return (
-        <HeadInjury
-          onBack={back}
-          onAnswer={(yes) =>
-            finish(yes ? { action: 'emergency', notes: [] } : { action: rules.headInjury.action, notes: [rules.headInjury.message] })
-          }
-        />
-      )
 
     case 'result':
       return <Result outcome={state.outcome} onBack={back} onRestart={restart} onContinue={() => go({ screen: 'profile' })} />

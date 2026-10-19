@@ -8,8 +8,8 @@
 // Everything is built for the RIGHT side; the app mirrors it for the left.
 // BodyParts3D axes: x = patient's left (+), y = back (+), z = up, in millimetres.
 // Camera directions are in app axes (x, y up, z front).
-// BodyParts3D has no models of the commonly sprained ligaments, so those are drawn as bands
-// between attachment points found on the real bones (see `landmarks`).
+// BodyParts3D has no models of the shoulder's AC and coracoclavicular ligaments, so those are
+// drawn as bands between attachment points found on the real bones (see `landmarks`).
 
 import fs from 'node:fs'
 import path from 'node:path'
@@ -74,39 +74,19 @@ function landmarks(region) {
     const fib = verts('right fibula')
     const tib = verts('right tibia')
     const tal = verts('right talus')
-    const cal = verts('right calcaneus')
-    const nav = verts(/navicular/i).filter((p) => p[0] < 0)
     const lmTip = extreme(fib, (p) => -p[2])
     const lmFront = extreme(fib.filter((p) => p[2] < lmTip[2] + 18), (p) => -p[1])
     const talusTop = extreme(tal, (p) => p[2])
     const talC = centroid(tal)
     const talusNeckLat = extreme(tal.filter((p) => p[2] > talC[2] - 4), (p) => -p[1] - 0.6 * p[0])
-    const calC = centroid(cal)
-    const cflTarget = add(lmTip, [3, 14, -24])
-    const calcLat = extreme(cal.filter((p) => p[0] < calC[0]), (p) => -dist(p, cflTarget))
     const tibC = centroid(tib)
     const mmTip = extreme(tib.filter((p) => p[0] > tibC[0] + 5), (p) => -p[2])
-    const talMed = extreme(tal.filter((p) => p[2] < mmTip[2] + 5), (p) => p[0])
-    const navMed = extreme(nav, (p) => p[0])
-    const sustent = extreme(cal.filter((p) => p[2] > calC[2]), (p) => p[0])
-    const h = talusTop[2] + 14
-    const tibAntLat = extreme(near(tib, h, 5), (p) => -p[1] - 0.7 * p[0])
-    const fibAntMed = extreme(near(fib, h - 6, 6), (p) => -p[1] + 0.7 * p[0])
-    const atfl = [lmFront, talusNeckLat]
-    const aitfl = [fibAntMed, tibAntLat]
+    const shinFront = extreme(near(tib, talusTop[2] + 30, 5), (p) => -p[1])
     return {
-      ligaments: [
-        { name: 'Anterior talofibular ligament', zone: 'outside', a: atfl[0], b: atfl[1], r: 2.6 },
-        { name: 'Calcaneofibular ligament', zone: 'outside', a: lmTip, b: calcLat, r: 2.4 },
-        { name: 'Deltoid ligament', zone: 'inside', a: mmTip, b: talMed, r: 3 },
-        { name: 'Deltoid ligament', zone: 'inside', a: mmTip, b: navMed, r: 2.4 },
-        { name: 'Deltoid ligament', zone: 'inside', a: mmTip, b: sustent, r: 2.6 },
-        { name: 'Anterior inferior tibiofibular ligament', zone: 'high', a: aitfl[0], b: aitfl[1], r: 2.6 },
-      ],
       zones: {
-        outside: { at: mid(...atfl), normal: [-1, -0.6, 0] },
+        outside: { at: mid(lmFront, talusNeckLat), normal: [-1, -0.6, 0] },
         inside: { at: add(mmTip, [0, 0, -8]), normal: [1, -0.1, 0] },
-        high: { at: add(mid(...aitfl), [0, 0, 18]), normal: [-0.35, -1, 0] },
+        high: { at: shinFront, normal: [0, -1, 0] },
       },
     }
   }
@@ -187,15 +167,7 @@ function landmarks(region) {
     const scaphToLun = extreme(scaph, (p) => p[1] + 0.6 * p[0])
     const lunToScaph = extreme(lun, (p) => p[1] - 0.6 * p[0])
     const triNear = extreme(tri, (p) => -dist(p, ulnarStyloid))
-    const ulnHead = centroid(uln.filter((p) => p[2] < ulnarStyloid[2] + 12))
-    const lunMed = extreme(lun, (p) => p[0])
     return {
-      ligaments: [
-        { name: 'Radial collateral ligament', zone: 'thumb', a: radialStyloid, b: scaphLat, r: 2.2 },
-        { name: 'Scapholunate ligament', zone: 'back', a: scaphToLun, b: lunToScaph, r: 2.4 },
-        { name: 'Triangular fibrocartilage complex', zone: 'pinky', a: ulnarStyloid, b: triNear, r: 2.6 },
-        { name: 'Triangular fibrocartilage complex', zone: 'pinky', a: ulnHead, b: lunMed, r: 2.4 },
-      ],
       zones: {
         thumb: { at: mid(radialStyloid, scaphLat), normal: [-1, 0.35, 0] },
         back: { at: mid(scaphToLun, lunToScaph), normal: [0, 1, 0] },

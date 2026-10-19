@@ -17,7 +17,7 @@ export function Home({ profile, injury, onNewInjury }) {
   const day = daysBetween(injury.date, now) + 1
   const title = part
     ? `${injury.side ? injury.side[0].toUpperCase() + injury.side.slice(1) + ' ' : ''}${part.name.toLowerCase()}`
-    : injury.partId === 'head' ? 'Head injury' : 'Injury'
+    : 'Injury'
 
   let phase
   let progress = 0

@@ -12,7 +12,7 @@ export function PickPart({ onPick, onBack }) {
     <Screen step={1} totalSteps={STEPS} onBack={onBack} title="What did you hurt?" subtitle="Pick the spot that hurts most.">
       <div className="grid">
         {BODY_PARTS.map((p) => (
-          <button key={p.id} className={`tile ${p.id === 'head' ? 'warn' : ''}`} onClick={() => onPick(p.id)}>
+          <button key={p.id} className="tile" onClick={() => onPick(p.id)}>
             <span className="tile-label">{p.label}</span>
             {p.sub && <span className="tile-sub">{p.sub}</span>}
           </button>
@@ -123,24 +123,6 @@ export function SelfTest({ test, index, total, side, onAnswer, onBack }) {
           ))}
         </div>
       )}
-    </Screen>
-  )
-}
-
-export function HeadInjury({ onAnswer, onBack }) {
-  const head = rules.headInjury
-  return (
-    <Screen onBack={onBack} title="Head injury" subtitle={head.message}>
-      <div className="card danger">
-        <p className="card-title">Do you have ANY of these right now?</p>
-        <ul className="list">
-          {head.emergencySigns.map((s) => <li key={s}>{s}</li>)}
-        </ul>
-      </div>
-      <div className="row">
-        <button className="btn yes" onClick={() => onAnswer(true)}>Yes</button>
-        <button className="btn no" onClick={() => onAnswer(false)}>No</button>
-      </div>
     </Screen>
   )
 }
