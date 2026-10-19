@@ -2,10 +2,14 @@
 // (BodyParts3D, © The Database Center for Life Science, licensed under CC Attribution 4.0 International).
 //
 // Usage: node scripts/build-anatomy.mjs <bodyparts3d-folder> <output-folder>
-// The BodyParts3D folder needs partof_element_parts.txt and the unzipped partof_BP3D_4.0_obj_99 meshes.
-// All regions are built for the RIGHT side; the app mirrors them for the left.
-// BodyParts3D axes: x = patient's left (+), y = back (+), z = up, in millimeters.
-// Zone points and fades use BodyParts3D axes; camera directions use app axes (x, y up, z front).
+// The folder needs partof_element_parts.txt, isa_element_parts.txt and the unzipped
+// obj/partof_BP3D_4.0_obj_99 and obj/isa_BP3D_4.0_obj_99 meshes.
+//
+// Everything is built for the RIGHT side; the app mirrors it for the left.
+// BodyParts3D axes: x = patient's left (+), y = back (+), z = up, in millimetres.
+// Camera directions are in app axes (x, y up, z front).
+// BodyParts3D has no models of the commonly sprained ligaments, so those are drawn as bands
+// between attachment points found on the real bones (see `landmarks`).
 
 import fs from 'node:fs'
 import path from 'node:path'
@@ -15,28 +19,201 @@ if (!srcDir || !outDir) {
   console.error('Usage: node scripts/build-anatomy.mjs <bodyparts3d-folder> <output-folder>')
   process.exit(1)
 }
-const objDir = path.join(srcDir, 'obj', 'partof_BP3D_4.0_obj_99')
 
-const elements = new Map()
-for (const line of fs.readFileSync(path.join(srcDir, 'partof_element_parts.txt'), 'utf8').split(/\r?\n/).slice(1)) {
-  const [, name, file] = line.split('\t')
-  if (!name || !file) continue
-  if (!elements.has(name)) elements.set(name, new Set())
-  elements.get(name).add(file)
+function readElements(listFile, objFolder) {
+  const map = new Map()
+  for (const line of fs.readFileSync(path.join(srcDir, listFile), 'utf8').split(/\r?\n/).slice(1)) {
+    const [, name, file] = line.split('\t')
+    if (!name || !file) continue
+    if (!map.has(name)) map.set(name, new Set())
+    map.get(name).add(path.join(srcDir, 'obj', objFolder, `${file}.obj`))
+  }
+  return map
+}
+const partOf = readElements('partof_element_parts.txt', 'partof_BP3D_4.0_obj_99')
+const isA = readElements('isa_element_parts.txt', 'isa_BP3D_4.0_obj_99')
+
+const objCache = new Map()
+function readObj(file) {
+  if (objCache.has(file)) return objCache.get(file)
+  const positions = []
+  const faces = []
+  for (const line of fs.readFileSync(file, 'utf8').split(/\r?\n/)) {
+    if (line.startsWith('v ')) positions.push(line.trim().split(/\s+/).slice(1, 4).map(Number))
+    else if (line.startsWith('f ')) faces.push(line.trim().split(/\s+/).slice(1).map((t) => parseInt(t, 10) - 1))
+  }
+  const mesh = { positions, faces }
+  objCache.set(file, mesh)
+  return mesh
+}
+
+function meshesFor(test, map = partOf) {
+  const files = new Set()
+  for (const [name, f] of map) if (typeof test === 'string' ? name === test : test.test(name)) f.forEach((x) => files.add(x))
+  return [...files].filter((f) => fs.existsSync(f)).map(readObj)
+}
+const verts = (name, map) => {
+  const list = meshesFor(name, map).flatMap((m) => m.positions)
+  if (!list.length) throw new Error(`No mesh for "${name}"`)
+  return list
+}
+
+// --- small vector helpers (millimetres, BodyParts3D axes) ---
+const add = (a, b) => a.map((v, i) => v + b[i])
+const sub = (a, b) => a.map((v, i) => v - b[i])
+const scl = (a, s) => a.map((v) => v * s)
+const mid = (a, b) => scl(add(a, b), 0.5)
+const dist = (a, b) => Math.hypot(...sub(a, b))
+const centroid = (ps) => scl(ps.reduce(add, [0, 0, 0]), 1 / ps.length)
+const extreme = (ps, score) => ps.reduce((best, p) => (score(p) > score(best) ? p : best))
+const near = (ps, z, tol) => ps.filter((p) => Math.abs(p[2] - z) < tol)
+
+// Landmarks are computed from the real bones so ligaments and pain spots sit where they belong anatomically.
+function landmarks(region) {
+  if (region === 'ankle') {
+    const fib = verts('right fibula')
+    const tib = verts('right tibia')
+    const tal = verts('right talus')
+    const cal = verts('right calcaneus')
+    const nav = verts(/navicular/i).filter((p) => p[0] < 0)
+    const lmTip = extreme(fib, (p) => -p[2])
+    const lmFront = extreme(fib.filter((p) => p[2] < lmTip[2] + 18), (p) => -p[1])
+    const talusTop = extreme(tal, (p) => p[2])
+    const talC = centroid(tal)
+    const talusNeckLat = extreme(tal.filter((p) => p[2] > talC[2] - 4), (p) => -p[1] - 0.6 * p[0])
+    const calC = centroid(cal)
+    const cflTarget = add(lmTip, [3, 14, -24])
+    const calcLat = extreme(cal.filter((p) => p[0] < calC[0]), (p) => -dist(p, cflTarget))
+    const tibC = centroid(tib)
+    const mmTip = extreme(tib.filter((p) => p[0] > tibC[0] + 5), (p) => -p[2])
+    const talMed = extreme(tal.filter((p) => p[2] < mmTip[2] + 5), (p) => p[0])
+    const navMed = extreme(nav, (p) => p[0])
+    const sustent = extreme(cal.filter((p) => p[2] > calC[2]), (p) => p[0])
+    const h = talusTop[2] + 14
+    const tibAntLat = extreme(near(tib, h, 5), (p) => -p[1] - 0.7 * p[0])
+    const fibAntMed = extreme(near(fib, h - 6, 6), (p) => -p[1] + 0.7 * p[0])
+    const atfl = [lmFront, talusNeckLat]
+    const aitfl = [fibAntMed, tibAntLat]
+    return {
+      ligaments: [
+        { name: 'Anterior talofibular ligament', zone: 'outside', a: atfl[0], b: atfl[1], r: 2.6 },
+        { name: 'Calcaneofibular ligament', zone: 'outside', a: lmTip, b: calcLat, r: 2.4 },
+        { name: 'Deltoid ligament', zone: 'inside', a: mmTip, b: talMed, r: 3 },
+        { name: 'Deltoid ligament', zone: 'inside', a: mmTip, b: navMed, r: 2.4 },
+        { name: 'Deltoid ligament', zone: 'inside', a: mmTip, b: sustent, r: 2.6 },
+        { name: 'Anterior inferior tibiofibular ligament', zone: 'high', a: aitfl[0], b: aitfl[1], r: 2.6 },
+      ],
+      zones: {
+        outside: { at: mid(...atfl), normal: [-1, -0.6, 0] },
+        inside: { at: add(mmTip, [0, 0, -8]), normal: [1, -0.1, 0] },
+        high: { at: add(mid(...aitfl), [0, 0, 18]), normal: [-0.35, -1, 0] },
+      },
+    }
+  }
+
+  if (region === 'shoulder') {
+    const cla = verts('right clavicle')
+    const sca = verts('right scapula')
+    const hum = verts('right humerus')
+    const claLat = extreme(cla, (p) => -p[0])
+    const acromion = extreme(sca.filter((p) => dist(p, claLat) < 28 && p[0] < claLat[0]), (p) => p[2])
+    const scaC = centroid(sca)
+    const coracoid = extreme(sca.filter((p) => p[2] > scaC[2]), (p) => -p[1])
+    const claUnder = extreme(cla.filter((p) => Math.abs(p[0] - coracoid[0]) < 14), (p) => -p[2])
+    const humTopZ = extreme(hum, (p) => p[2])[2]
+    const head = hum.filter((p) => p[2] > humTopZ - 45)
+    const greaterTub = extreme(head, (p) => -p[0])
+    const headFront = extreme(head, (p) => -p[1])
+    return {
+      ligaments: [
+        { name: 'Acromioclavicular ligament', zone: 'top', a: claLat, b: acromion, r: 3 },
+        { name: 'Coracoclavicular ligament', zone: 'top', a: coracoid, b: claUnder, r: 3 },
+      ],
+      muscles: [
+        { name: 'right supraspinatus', zone: 'outer' },
+        { name: 'right infraspinatus muscle', zone: 'outer' },
+        { name: 'right teres minor', zone: 'outer' },
+        { name: 'acromial part of right deltoid', zone: 'outer' },
+        { name: 'right subscapularis', zone: 'front' },
+        { name: 'clavicular part of right deltoid', zone: 'front' },
+      ],
+      zones: {
+        outer: { at: greaterTub, normal: [-1, 0, 0.15] },
+        front: { at: headFront, normal: [-0.2, -1, 0] },
+        top: { at: mid(claLat, acromion), normal: [-0.15, 0, 1] },
+      },
+    }
+  }
+
+  if (region === 'hamstring') {
+    const hip = verts('right hip bone')
+    const fem = verts('right femur')
+    const ischialTuberosity = extreme(hip, (p) => -p[2])
+    const kneeZ = extreme(fem, (p) => -p[2])[2]
+    const hams = verts(/^(long head of right biceps femoris|right semitendinosus|right semimembranosus)$/, isA)
+    const midZ = (ischialTuberosity[2] + kneeZ) / 2
+    const midBelly = centroid(near(hams, midZ, 25))
+    const lowZ = kneeZ + 55
+    const behindKnee = centroid(near(hams, lowZ, 15))
+    return {
+      muscles: [
+        { name: 'long head of right biceps femoris', zone: 'middle' },
+        { name: 'short head of right biceps femoris', zone: 'lower' },
+        { name: 'right semitendinosus', zone: 'middle' },
+        { name: 'right semimembranosus', zone: 'middle' },
+        { name: 'long head of left biceps femoris' },
+        { name: 'short head of left biceps femoris' },
+        { name: 'left semitendinosus' },
+        { name: 'left semimembranosus' },
+      ],
+      zones: {
+        upper: { at: add(ischialTuberosity, [-28, 0, 18]), normal: [0, 1, -0.2] },
+        middle: { at: midBelly, normal: [0, 1, 0] },
+        lower: { at: behindKnee, normal: [0, 1, 0] },
+      },
+    }
+  }
+
+  if (region === 'wrist') {
+    const rad = verts('right radius')
+    const uln = verts('right ulna')
+    const scaph = verts('right scaphoid')
+    const lun = verts('right lunate')
+    const tri = verts('right triquetral')
+    const radMinZ = extreme(rad, (p) => -p[2])[2]
+    const radialStyloid = extreme(rad.filter((p) => p[2] < radMinZ + 14), (p) => -p[0])
+    const ulnarStyloid = extreme(uln, (p) => -p[2])
+    const scaphLat = extreme(scaph, (p) => -p[0])
+    const scaphToLun = extreme(scaph, (p) => p[1] + 0.6 * p[0])
+    const lunToScaph = extreme(lun, (p) => p[1] - 0.6 * p[0])
+    const triNear = extreme(tri, (p) => -dist(p, ulnarStyloid))
+    const ulnHead = centroid(uln.filter((p) => p[2] < ulnarStyloid[2] + 12))
+    const lunMed = extreme(lun, (p) => p[0])
+    return {
+      ligaments: [
+        { name: 'Radial collateral ligament', zone: 'thumb', a: radialStyloid, b: scaphLat, r: 2.2 },
+        { name: 'Scapholunate ligament', zone: 'back', a: scaphToLun, b: lunToScaph, r: 2.4 },
+        { name: 'Triangular fibrocartilage complex', zone: 'pinky', a: ulnarStyloid, b: triNear, r: 2.6 },
+        { name: 'Triangular fibrocartilage complex', zone: 'pinky', a: ulnHead, b: lunMed, r: 2.4 },
+      ],
+      zones: {
+        thumb: { at: mid(radialStyloid, scaphLat), normal: [-1, 0.35, 0] },
+        back: { at: mid(scaphToLun, lunToScaph), normal: [0, 1, 0] },
+        pinky: { at: mid(ulnarStyloid, triNear), normal: [1, 0.15, 0] },
+      },
+    }
+  }
+  throw new Error(region)
 }
 
 const REGIONS = {
   ankle: {
-    bones: /^right (tibia|fibula|talus|calcaneus|cuboid bone|(medial|intermediate|lateral) cuneiform bone|(first|second|third|fourth|fifth) metatarsal bone)$|navicular.*right|right.*navicular|phalanx of right (big|second|third|fourth|little) toe$/,
+    bones: /^right (tibia|fibula|talus|calcaneus|cuboid bone|(medial|intermediate|lateral) cuneiform bone|(first|second|third|fourth|fifth) metatarsal bone)$|navicular|phalanx of right (big|second|third|fourth|little) toe$/,
     box: { min: [-175, -260, -90], max: [10, 90, 230] },
     fades: [{ axis: 'z', full: 120, zero: 225 }],
     zoom: 1.45,
     camera: [-0.9, 0.3, 0.32],
-    zones: [
-      { id: 'outside', label: 'Outside', at: [-118, -62, -8], normal: [-1, 0.15, 0] },
-      { id: 'high', label: 'Front', at: [-72, -110, 70], normal: [0, -1, 0.1] },
-      { id: 'inside', label: 'Inside', at: [-38, -82, -2], normal: [1, 0.1, 0] },
-    ],
+    labels: { outside: 'Outside', high: 'Front', inside: 'Inside' },
   },
   shoulder: {
     bones: /^right (humerus|scapula|clavicle|(first|second|third|fourth|fifth|sixth|seventh) rib)$|^sternum$|^(thoracic|cervical) vertebral column$/,
@@ -49,11 +226,7 @@ const REGIONS = {
     ],
     zoom: 1.3,
     camera: [-0.55, 0.12, 0.83],
-    zones: [
-      { id: 'outer', label: 'Outer side', at: [-240, -75, 1285], normal: [-1, 0, 0.1] },
-      { id: 'front', label: 'Front', at: [-190, -120, 1285], normal: [-0.15, -1, 0] },
-      { id: 'top', label: 'Top', at: [-150, -80, 1355], normal: [0, 0, 1] },
-    ],
+    labels: { outer: 'Outer side', front: 'Front', top: 'Top' },
   },
   hamstring: {
     bones: /^(right|left) (femur|hip bone)$|^sacrum$/,
@@ -65,35 +238,17 @@ const REGIONS = {
     ],
     zoom: 1.25,
     camera: [-0.25, 0.12, -0.97],
-    zones: [
-      { id: 'upper', label: 'Near buttock', at: [-100, 40, 745], normal: [0, 1, -0.1] },
-      { id: 'middle', label: 'Middle', at: [-90, 40, 610], normal: [0, 1, 0] },
-      { id: 'lower', label: 'Behind knee', at: [-90, 30, 450], normal: [0, 1, 0] },
-    ],
+    labels: { upper: 'Near buttock', middle: 'Middle', lower: 'Behind knee' },
   },
   wrist: {
     bones: /^right (radius|ulna|scaphoid|lunate|triquetral|pisiform|trapezium|trapezoid|capitate|hamate|(first|second|third|fourth|fifth) metacarpal bone)$|phalanx of right (thumb|index finger|middle finger|ring finger|little finger)$/,
     box: { min: [-340, -200, 640], max: [-187, 0, 935] },
     fades: [{ axis: 'z', full: 870, zero: 932 }],
     roll: 90,
-    zoom: 1.05,
-    camera: [0.1, 0.55, 0.83],
-    zones: [
-      { id: 'thumb', label: 'Thumb side', at: [-276, -110, 812], normal: [-1, -0.1, 0] },
-      { id: 'back', label: 'Back of wrist', at: [-245, -60, 828], normal: [0, 1, 0] },
-      { id: 'pinky', label: 'Pinky side', at: [-206, -95, 820], normal: [1, 0, 0] },
-    ],
+    zoom: 1.15,
+    camera: [0.15, -0.4, -0.9],
+    labels: { thumb: 'Thumb side', back: 'Back of wrist', pinky: 'Pinky side' },
   },
-}
-
-function readObj(file) {
-  const positions = []
-  const faces = []
-  for (const line of fs.readFileSync(file, 'utf8').split(/\r?\n/)) {
-    if (line.startsWith('v ')) positions.push(line.trim().split(/\s+/).slice(1, 4).map(Number))
-    else if (line.startsWith('f ')) faces.push(line.trim().split(/\s+/).slice(1).map((t) => parseInt(t, 10) - 1))
-  }
-  return { positions, faces }
 }
 
 function inBox(p, box) {
@@ -186,39 +341,48 @@ function encode({ positions, indices }, center, deg) {
   }
 }
 
-// Moves a zone anchor onto the skin: the outermost skin point near the line through it along the normal.
+// Moves a pain spot onto the skin: the outermost skin point near the line through it along the normal.
 function snapToSkin(at, normal, skinPositions) {
   const n = normal.map((x) => x / Math.hypot(...normal))
   let best = null
   let bestT = -Infinity
   for (const p of skinPositions) {
-    const d = p.map((v, i) => v - at[i])
+    const d = sub(p, at)
     const t = d[0] * n[0] + d[1] * n[1] + d[2] * n[2]
     const perp = Math.hypot(d[0] - t * n[0], d[1] - t * n[1], d[2] - t * n[2])
-    if (perp < 14 && t > bestT && t < 120) {
+    if (perp < 10 && t > bestT && t > -5 && t < 90) {
       bestT = t
       best = p
     }
   }
-  return best || at
+  if (!best) throw new Error(`Could not find skin above ${at.map(Math.round)}`)
+  return best
 }
 
-const skinFile = [...elements.get('skin')][0]
-const skin = readObj(path.join(objDir, `${skinFile}.obj`))
+const skin = readObj([...partOf.get('skin')][0])
 fs.mkdirSync(outDir, { recursive: true })
 
 for (const [name, region] of Object.entries(REGIONS)) {
-  const boneFiles = new Set()
-  for (const [n, files] of elements) if (region.bones.test(n)) files.forEach((f) => boneFiles.add(f))
-  const bones = simplify(
-    crop(
-      [...boneFiles].filter((f) => fs.existsSync(path.join(objDir, `${f}.obj`))).map((f) => readObj(path.join(objDir, `${f}.obj`))),
-      region.box,
-    ),
-    region.boneCell ?? 1.5,
-  )
-  const skinPart = simplify(crop([skin], region.box), region.skinCell ?? 0.01)
   const center = region.box.min.map((v, i) => (v + region.box.max[i]) / 2)
+  const app = (p) => roll(toApp(p, center), region.roll)
+  const appDir = (n) => roll(dirToApp(n), region.roll)
+  const lm = landmarks(name)
+
+  const bones = simplify(crop(meshesFor(region.bones), region.box), region.boneCell ?? 1.5)
+  const skinPart = simplify(crop([skin], region.box), 0.01)
+
+  const muscles = (lm.muscles ?? []).map((m) => ({
+    name: m.name,
+    zone: m.zone ?? null,
+    mesh: encode(simplify(crop(meshesFor(m.name, isA), region.box), 2), center, region.roll),
+  }))
+  const ligaments = (lm.ligaments ?? []).map((l) => ({
+    name: l.name,
+    zone: l.zone,
+    a: app(l.a),
+    b: app(l.b),
+    r: l.r / 100,
+  }))
 
   const axisIndex = { x: 0, y: 1, z: 2 }
   const fades = region.fades.map((f) => {
@@ -235,22 +399,28 @@ for (const [name, region] of Object.entries(REGIONS)) {
     return { axis: roll(a, region.roll), full: along(f.full), zero: along(f.zero) }
   })
 
+  const zones = Object.entries(region.labels).map(([id, label]) => {
+    const z = lm.zones[id]
+    const onSkin = snapToSkin(z.at, z.normal, skinPart.positions)
+    console.log(`  ${name}/${id}: landmark ${z.at.map(Math.round)} -> skin ${onSkin.map(Math.round)} (${dist(z.at, onSkin).toFixed(0)} mm out)`)
+    return { id, label, at: app(onSkin), normal: appDir(z.normal) }
+  })
+
   const model = {
     name,
     source: 'BodyParts3D, © The Database Center for Life Science, licensed under CC Attribution 4.0 International',
     camera: region.camera.map((v) => v / Math.hypot(...region.camera)),
     zoom: region.zoom ?? 1,
     fades,
-    zones: region.zones.map((z) => ({
-      id: z.id,
-      label: z.label,
-      at: roll(toApp(snapToSkin(z.at, z.normal, skinPart.positions), center), region.roll),
-      normal: roll(dirToApp(z.normal), region.roll),
-    })),
+    zones,
     skin: encode(skinPart, center, region.roll),
     bones: encode(bones, center, region.roll),
+    muscles,
+    ligaments,
   }
   const file = path.join(outDir, `${name}.json`)
   fs.writeFileSync(file, JSON.stringify(model))
-  console.log(`${name}: ${boneFiles.size} bone files, skin ${model.skin.triangles} tris, bones ${model.bones.triangles} tris, ${(fs.statSync(file).size / 1024).toFixed(0)} KB`)
+  console.log(
+    `${name}: skin ${model.skin.triangles} tris, bones ${model.bones.triangles} tris, ${muscles.length} muscles, ${ligaments.length} ligaments, ${(fs.statSync(file).size / 1024).toFixed(0)} KB`,
+  )
 }

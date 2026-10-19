@@ -161,6 +161,26 @@ export default function BodyModel3D({ region, side, selected, onToggle, onError 
       const bones = new THREE.Mesh(boneGeo, glassMaterial('#d6ecff', { power: 1.3, base: 0.16, opacity: 0.75, lit: 1 }, model.fades))
       const body = new THREE.Group()
       body.add(skin, bones)
+
+      // Muscles and ligaments glow red when their pain spot is facing the viewer or selected.
+      const hot = new THREE.Color('#ff3b2f')
+      const structures = []
+      for (const m of model.muscles ?? []) {
+        const mat = glassMaterial('#ff8a3d', { power: 1.4, base: 0.22, opacity: 0.6, lit: 1 }, model.fades)
+        body.add(new THREE.Mesh(decode(m.mesh), mat))
+        structures.push({ zone: m.zone, mat, base: new THREE.Color('#ff8a3d'), baseOpacity: 0.6 })
+      }
+      for (const l of model.ligaments ?? []) {
+        const a = new THREE.Vector3(...l.a)
+        const b = new THREE.Vector3(...l.b)
+        const dir = b.clone().sub(a)
+        const mat = glassMaterial('#ffc061', { power: 1.2, base: 0.45, opacity: 0.75, lit: 1 }, model.fades)
+        const band = new THREE.Mesh(new THREE.CapsuleGeometry(l.r, Math.max(dir.length() - l.r * 2, 0.001), 4, 12), mat)
+        band.position.copy(a).add(b).multiplyScalar(0.5)
+        band.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir.normalize())
+        body.add(band)
+        structures.push({ zone: l.zone, mat, base: new THREE.Color('#ffc061'), baseOpacity: 0.75 })
+      }
       body.scale.x = sx
       scene.add(body)
 
@@ -247,12 +267,14 @@ export default function BodyModel3D({ region, side, selected, onToggle, onError 
         const facings = spots.map((s) => toCam.copy(camera.position).sub(s.world).normalize().dot(s.normal))
         const best = facings.indexOf(Math.max(...facings))
         const placed = []
+        const heat = {}
         for (const [i, s] of spots.entries()) {
           const facing = facings[i]
           const inView = i === best ? smoothstep(0.3, 0.85, facing) : 0
           const isOn = selectedRef.current.has(s.id)
           const pulse = 0.82 + 0.18 * Math.sin(time / 280)
           const k = Math.max(inView * 0.9, isOn ? pulse : 0)
+          heat[s.id] = k
           s.core.material.opacity = k
           s.halo.material.opacity = k * 0.5
 
@@ -297,6 +319,11 @@ export default function BodyModel3D({ region, side, selected, onToggle, onError 
           l.line.setAttribute('x2', l.px - (ax / alen) * 7)
           l.line.setAttribute('y2', l.py - (ay / alen) * 7)
           l.line.classList.toggle('behind', hidden)
+        }
+        for (const st of structures) {
+          const k = heat[st.zone] ?? 0
+          st.mat.uniforms.uColor.value.lerpColors(st.base, hot, k)
+          st.mat.uniforms.uOpacity.value = st.baseOpacity + (1.4 - st.baseOpacity) * k
         }
         renderer.render(scene, camera)
         raf = requestAnimationFrame(tick)
