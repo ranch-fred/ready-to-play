@@ -1,16 +1,25 @@
-# React + Vite
+# ReadyToPlay
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+A phone-friendly web app that helps student athletes figure out how serious an injury is, where to get care, and roughly when they can play again. ReadyToPlay does not replace a doctor or athletic trainer.
 
-Currently, two official plugins are available:
+## Run it
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+```bash
+npm install
+npm run dev
+```
 
-## React Compiler
+## 3D body models
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+The 3D models in `public/models` are built from BodyParts3D by `scripts/build-anatomy.mjs`:
 
-## Expanding the Oxlint configuration
+```bash
+node scripts/build-anatomy.mjs <bodyparts3d-folder> public/models
+```
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and Oxlint's TypeScript related rules in your project.
+The BodyParts3D folder needs `partof_element_parts.txt` and the unzipped `partof_BP3D_4.0_obj_99` meshes from the [BodyParts3D download page](https://dbarchive.biosciencedbc.jp/en/bodyparts3d/download.html).
+
+## Credits
+
+- 3D anatomy: BodyParts3D, © The Database Center for Life Science, licensed under [CC Attribution 4.0 International](https://dbarchive.biosciencedbc.jp/en/bodyparts3d/lic.html).
+- Injury rules (`src/data/rules.json`) cite their medical sources inline.

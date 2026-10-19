@@ -322,6 +322,16 @@ button, input { font: inherit; color: inherit; }
   transition: opacity 0.4s ease;
 }
 .ankle-hint.gone { opacity: 0; }
+.model-loading {
+  position: absolute; inset: 0;
+  display: grid; place-items: center;
+  color: var(--muted); font-size: 14px;
+}
+.model-credit {
+  position: absolute; right: 12px; bottom: 2px; margin: 0;
+  color: rgba(255, 255, 255, 0.35); font-size: 10px;
+  pointer-events: none;
+}
 .picked { border-radius: 16px; padding: 12px 14px; font-size: 14px; display: grid; gap: 4px; }
 .picked p { margin: 0; color: var(--muted); }
 .picked b { color: var(--text); }

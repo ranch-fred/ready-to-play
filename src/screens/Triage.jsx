@@ -2,7 +2,8 @@ import { lazy, Suspense, useState } from 'react'
 import { Screen, Choice } from '../components/Screen'
 import { BODY_PARTS, rules } from '../logic/triage'
 
-const Ankle3D = lazy(() => import('../components/Ankle3D'))
+const BodyModel3D = lazy(() => import('../components/BodyModel3D'))
+const MODEL_PARTS = ['ankle', 'shoulder', 'hamstring', 'wrist']
 
 const STEPS = 5
 
@@ -36,7 +37,7 @@ export function PickSide({ partId, onPick, onBack }) {
 export function PickLocation({ partId, side, onDone, onBack }) {
   const injury = rules.injuries[partId]
   const [selected, setSelected] = useState([])
-  const [use3d, setUse3d] = useState(partId === 'ankle')
+  const [use3d, setUse3d] = useState(MODEL_PARTS.includes(partId))
   const toggle = (id) => setSelected((s) => (s.includes(id) ? s.filter((x) => x !== id) : [...s, id]))
   const picked = injury.locations.filter((l) => selected.includes(l.id))
 
@@ -60,7 +61,7 @@ export function PickLocation({ partId, side, onDone, onBack }) {
       {use3d ? (
         <>
           <Suspense fallback={<div className="ankle3d" />}>
-            <Ankle3D side={side} selected={selected} onToggle={toggle} onError={() => setUse3d(false)} />
+            <BodyModel3D region={partId} side={side} selected={selected} onToggle={toggle} onError={() => setUse3d(false)} />
           </Suspense>
           {picked.length > 0 && (
             <div className="picked">
