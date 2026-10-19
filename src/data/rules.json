@@ -3,7 +3,7 @@
     "version": "0.1.0-draft",
     "status": "DRAFT - must be reviewed by the school's athletic trainer before the demo",
     "reviewedBy": null,
-    "disclaimer": "ReadyToPlay does not replace a doctor or athletic trainer. Only your athletic trainer can clear you to play.",
+    "disclaimer": "ReadyToPlay does not replace a doctor or athletic trainer. Only an athletic trainer or doctor can clear you to play.",
     "estimatePolicy": "Every estimate starts at maxDays (the conservative end) and the full range is shown. Improving check-ins can move it toward minDays but never below it. Getting worse never moves it earlier."
   },
 
@@ -110,7 +110,8 @@
       { "if": "pain >= 7 OR any function test failed", "severity": "see_someone" },
       { "if": "pain 4-6 OR any function test 'with difficulty'", "severity": "moderate" },
       { "if": "pain <= 3 AND all function tests passed", "severity": "mild" }
-    ]
+    ],
+    "swellingRule": "Swelling 'A lot' counts the same as a function test answered 'With difficulty'."
   },
 
   "phaseTemplate": [
@@ -132,6 +133,39 @@
   "injuries": {
     "ankle": {
       "name": "Ankle sprain",
+      "askSide": true,
+      "locationQuestion": "Where does it hurt most?",
+      "locations": [
+        {
+          "id": "outside",
+          "label": "Outside of the ankle",
+          "hint": "Your foot rolled inward. This is the most common sprain.",
+          "effect": "standard",
+          "sources": ["cleveland_ankle", "statpearls_ankle"]
+        },
+        {
+          "id": "high",
+          "label": "Above the ankle, front of the lower leg",
+          "hint": "Your foot got twisted outward, often in a collision. Hurts more when you turn your foot out.",
+          "effect": "estimate_override",
+          "estimates": {
+            "mild": { "minDays": 42, "maxDays": 56, "label": "Possible high ankle sprain" },
+            "moderate": { "minDays": 42, "maxDays": 84, "label": "Possible high ankle sprain" }
+          },
+          "alsoAction": "see_trainer",
+          "note": "High ankle sprains usually take 6-8 weeks or longer, about twice as long as a normal sprain. Get your trainer or a doctor to confirm.",
+          "sources": ["cleveland_high_ankle", "pmc_ankle_athlete"]
+        },
+        {
+          "id": "inside",
+          "label": "Inside of the ankle",
+          "hint": "Your foot rolled outward.",
+          "effect": "action",
+          "action": "see_trainer",
+          "note": "Inside-ankle sprains are less common and harder to judge at home. A trainer or doctor should check it before you start a plan.",
+          "sources": ["cleveland_high_ankle"]
+        }
+      ],
       "redFlags": [
         {
           "id": "ottawa_weight",
@@ -157,8 +191,8 @@
         { "id": "swelling", "type": "choice", "question": "How swollen is it?", "options": ["None", "A little", "A lot"] }
       ],
       "estimates": {
-        "mild": { "minDays": 7, "maxDays": 14, "label": "Grade 1 (stretched ligament)" },
-        "moderate": { "minDays": 21, "maxDays": 42, "label": "Grade 2 (partial tear)" },
+        "mild": { "minDays": 7, "maxDays": 14, "label": "Mild sprain (like a grade 1)" },
+        "moderate": { "minDays": 21, "maxDays": 42, "label": "Moderate (like a grade 2)" },
         "see_someone": { "action": "see_care_today", "note": "Possible grade 3 (complete tear): 6-12 weeks and sometimes surgery. Not planned by the app." }
       },
       "trainerCheckDay": { "minDay": 4, "maxDay": 7, "reason": "Exams are more accurate 4-7 days after the injury." },
@@ -175,6 +209,33 @@
 
     "shoulder": {
       "name": "Shoulder strain / overuse pain",
+      "askSide": true,
+      "locationQuestion": "Where does it hurt most?",
+      "locations": [
+        {
+          "id": "outer",
+          "label": "Outer side of the shoulder",
+          "hint": "Worse when you lift your arm out to the side or overhead.",
+          "effect": "standard",
+          "sources": ["aaos_rotator_cuff", "cleveland_shoulder"]
+        },
+        {
+          "id": "front",
+          "label": "Front of the shoulder",
+          "hint": "Can spread down the front of your arm.",
+          "effect": "standard",
+          "sources": ["cleveland_shoulder"]
+        },
+        {
+          "id": "top",
+          "label": "Top of the shoulder",
+          "hint": "Often after falling on your shoulder or getting hit on it.",
+          "effect": "action",
+          "action": "see_trainer",
+          "note": "Pain on top after a fall or hit can be a shoulder separation (AC joint). Mild ones heal in about 2 weeks, worse ones take 6-8 weeks or more, and only an exam can tell which. A bump on top means see care today.",
+          "sources": ["cleveland_separated", "hopkins_ac"]
+        }
+      ],
       "redFlags": [
         {
           "id": "sudden_weak",
@@ -231,13 +292,42 @@
 
     "hamstring": {
       "name": "Hamstring strain",
+      "askSide": true,
+      "locationQuestion": "Where on the back of your thigh does it hurt most?",
+      "locations": [
+        {
+          "id": "middle",
+          "label": "Middle of the back of the thigh",
+          "hint": "The most common spot for a pulled hamstring.",
+          "effect": "standard",
+          "sources": ["medline_hamstring", "cleveland_hamstring"]
+        },
+        {
+          "id": "upper",
+          "label": "High up, near the buttock",
+          "hint": "Right where the leg meets the buttock.",
+          "effect": "action",
+          "action": "see_care_today",
+          "note": "Pain this high can mean the tendon is injured or pulled off the bone. Tendon injuries can take months and sometimes need surgery.",
+          "sources": ["medline_hamstring", "pmc_hamstring_tendon"]
+        },
+        {
+          "id": "lower",
+          "label": "Low, right behind the knee",
+          "hint": "Just above the back of the knee.",
+          "effect": "action",
+          "action": "see_care_today",
+          "note": "Pain close to the knee can mean the tendon pulled off the bone. A doctor should check it.",
+          "sources": ["medline_hamstring"]
+        }
+      ],
       "redFlags": [
         {
-          "id": "near_buttock_bruise",
-          "question": "Is the pain right up by your buttock or behind your knee, or is there a lot of bruising?",
+          "id": "big_bruise",
+          "question": "Is there a lot of bruising on the back of your leg?",
           "triggerAnswer": true,
           "action": "see_care_today",
-          "note": "The tendon may have pulled off the bone. Usually needs an orthopedic doctor.",
+          "note": "Heavy bruising can mean the tendon pulled off the bone.",
           "sources": ["medline_hamstring", "cleveland_hamstring"]
         },
         {
@@ -255,8 +345,8 @@
         { "id": "stretch", "type": "function", "question": "Can you gently straighten your leg and lean forward a little?", "options": ["Yes", "With difficulty", "No"] }
       ],
       "estimates": {
-        "mild": { "minDays": 7, "maxDays": 21, "label": "Grade 1 (mild strain)" },
-        "moderate": { "minDays": 21, "maxDays": 42, "label": "Grade 2 (partial tear)" },
+        "mild": { "minDays": 7, "maxDays": 21, "label": "Mild strain (like a grade 1)" },
+        "moderate": { "minDays": 21, "maxDays": 42, "label": "Moderate (like a grade 2)" },
         "see_someone": { "action": "see_care_today", "note": "Possible grade 3 (complete tear): several months and sometimes surgery." }
       },
       "trainerCheckDay": { "minDay": 7, "maxDay": 14, "reason": "MedlinePlus advises a follow-up 1-2 weeks after the injury." },
@@ -273,6 +363,34 @@
 
     "wrist": {
       "name": "Wrist sprain",
+      "askSide": true,
+      "locationQuestion": "Where does it hurt most?",
+      "locations": [
+        {
+          "id": "thumb",
+          "label": "Thumb side",
+          "hint": "Often after falling on an outstretched hand.",
+          "effect": "standard",
+          "note": "We'll do an extra check for a hidden broken bone (scaphoid), which is common on this side.",
+          "sources": ["aafp_scaphoid", "aaos_scaphoid"]
+        },
+        {
+          "id": "back",
+          "label": "Back or middle of the wrist",
+          "hint": "The top of your wrist, above the back of your hand.",
+          "effect": "standard",
+          "sources": ["clevelandclinic_wrist", "aaos_wrist"]
+        },
+        {
+          "id": "pinky",
+          "label": "Pinky side",
+          "hint": "Might click or pop when you turn your wrist.",
+          "effect": "action",
+          "action": "see_trainer",
+          "note": "Pinky-side pain can be a cartilage injury (TFCC) that heals slower than a normal sprain. Get it checked before starting a plan.",
+          "sources": ["cleveland_tfcc", "pmc_wrist_sports"]
+        }
+      ],
       "redFlags": [
         {
           "id": "snuffbox",
@@ -341,6 +459,13 @@
     "aafp_scaphoid": { "title": "Diagnosis and Management of Scaphoid Fractures", "publisher": "American Family Physician (AAFP), 2004", "url": "https://www.aafp.org/pubs/afp/issues/2004/0901/p879.html" },
     "aaos_scaphoid": { "title": "Scaphoid Fracture of the Wrist", "publisher": "AAOS OrthoInfo", "url": "https://orthoinfo.aaos.org/en/diseases--conditions/scaphoid-fracture-of-the-wrist/" },
     "aaos_soft_tissue": { "title": "Sprains, Strains and Other Soft-Tissue Injuries", "publisher": "AAOS OrthoInfo", "url": "https://www.orthoinfo.org/en/diseases--conditions/sprains-strains-and-other-soft-tissue-injuries/" },
+    "cleveland_high_ankle": { "title": "High Ankle Sprain", "publisher": "Cleveland Clinic", "url": "https://my.clevelandclinic.org/health/diseases/22249-high-ankle-sprains" },
+    "pmc_ankle_athlete": { "title": "Assessment of the Injured Ankle in the Athlete", "publisher": "Journal of Athletic Training (PMC)", "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC164372/" },
+    "cleveland_separated": { "title": "Separated Shoulder", "publisher": "Cleveland Clinic", "url": "https://my.clevelandclinic.org/health/diseases/17909-separated-shoulder" },
+    "hopkins_ac": { "title": "AC Joint Problems", "publisher": "Johns Hopkins Medicine", "url": "https://www.hopkinsmedicine.org/health/conditions-and-diseases/ac-joint-problems" },
+    "pmc_hamstring_tendon": { "title": "Diagnosis and prognosis of acute hamstring injuries in athletes", "publisher": "Knee Surgery, Sports Traumatology, Arthroscopy (PMC)", "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC3549245/" },
+    "cleveland_tfcc": { "title": "TFCC Tear", "publisher": "Cleveland Clinic", "url": "https://my.clevelandclinic.org/health/diseases/21832-triangular-fibrocartilage-complex-tear-tfcc" },
+    "pmc_wrist_sports": { "title": "Sports injuries of the wrist", "publisher": "PMC (NIH)", "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC3702762/" },
     "cdc_headsup": { "title": "HEADS UP: Signs and Symptoms of Concussion", "publisher": "CDC", "url": "https://www.cdc.gov/heads-up/signs-symptoms/index.html" }
   }
 }
