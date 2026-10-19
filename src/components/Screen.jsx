@@ -1,6 +1,6 @@
 import { rules } from '../logic/triage'
 
-export function Screen({ step, totalSteps, onBack, title, subtitle, children, footer }) {
+export function Screen({ step, totalSteps, onBack, title, subtitle, children, footer, stickyFooter }) {
   return (
     <div className="screen">
       <header className="topbar">
@@ -23,17 +23,20 @@ export function Screen({ step, totalSteps, onBack, title, subtitle, children, fo
       {title && <h1 className="title">{title}</h1>}
       {subtitle && <p className="subtitle">{subtitle}</p>}
       <div className="content">{children}</div>
-      {footer && <div className="footer">{footer}</div>}
+      {footer && <div className={`footer ${stickyFooter ? 'sticky' : ''}`}>{footer}</div>}
       <p className="disclaimer">{rules.meta.disclaimer}</p>
     </div>
   )
 }
 
-export function Choice({ label, hint, onClick, tone }) {
+export function Choice({ label, hint, onClick, selected }) {
   return (
-    <button className={`choice ${tone || ''}`} onClick={onClick}>
-      <span className="choice-label">{label}</span>
-      {hint && <span className="choice-hint">{hint}</span>}
+    <button className={`choice ${selected ? 'on' : ''}`} onClick={onClick} aria-pressed={selected}>
+      <span className="choice-text">
+        <span className="choice-label">{label}</span>
+        {hint && <span className="choice-hint">{hint}</span>}
+      </span>
+      {selected !== undefined && <span className="check" aria-hidden="true" />}
     </button>
   )
 }

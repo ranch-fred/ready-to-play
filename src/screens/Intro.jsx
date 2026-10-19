@@ -13,7 +13,7 @@ export function Intro({ onStart }) {
         </p>
         <ul className="intro-points">
           <li>Checks for warning signs first</li>
-          <li>Recovery plan built from medical sources</li>
+          <li>Day-by-day recovery plan</li>
           <li>Return date that's honest, not hopeful</li>
         </ul>
       </div>

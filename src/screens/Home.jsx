@@ -10,7 +10,8 @@ const STATUS = {
 export function Home({ profile, injury, onNewInjury }) {
   const { outcome } = injury
   const part = rules.injuries[injury.partId]
-  const location = part?.locations.find((l) => l.id === injury.locationId)
+  const spotIds = injury.locationIds ?? (injury.locationId ? [injury.locationId] : [])
+  const spots = part?.locations.filter((l) => spotIds.includes(l.id)).map((l) => l.label) ?? []
   const status = STATUS[outcome.action] || STATUS.see_trainer
   const [now] = useState(() => new Date())
   const day = daysBetween(injury.date, now) + 1
@@ -37,7 +38,7 @@ export function Home({ profile, injury, onNewInjury }) {
           <div>
             <p className="eyebrow">Day {day}</p>
             <h2 className="injury-title">{title}</h2>
-            {location && <p className="muted">{location.label}</p>}
+            {spots.length > 0 && <p className="muted">{spots.join(' · ')}</p>}
           </div>
           <span className={`status ${status.tone}`}>{status.label}</span>
         </div>

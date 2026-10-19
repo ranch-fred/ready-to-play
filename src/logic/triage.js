@@ -44,12 +44,12 @@ export function scoreSelfTests(partId, answers) {
   return 'mild'
 }
 
-// Combines body part, pain location, and self-test severity into one outcome.
-export function buildOutcome({ partId, locationId, severity }) {
+// Combines body part, every painful spot, and self-test severity into one outcome.
+export function buildOutcome({ partId, locationIds = [], severity }) {
   const injury = rules.injuries[partId]
-  const location = injury.locations.find((l) => l.id === locationId)
-  const notes = []
-  if (location?.note) notes.push(location.note)
+  const locations = injury.locations.filter((l) => locationIds.includes(l.id))
+  const override = locations.find((l) => l.effect === 'estimate_override')
+  const notes = locations.map((l) => l.note).filter(Boolean)
 
   if (severity === 'see_someone') {
     const est = injury.estimates.see_someone
@@ -57,8 +57,7 @@ export function buildOutcome({ partId, locationId, severity }) {
     return { action: 'see_care_today', severity, notes }
   }
 
-  let estimate = injury.estimates[severity]
-  if (location?.effect === 'estimate_override') estimate = location.estimates[severity]
+  const estimate = override ? override.estimates[severity] : injury.estimates[severity]
 
   if (estimate.action) {
     if (estimate.note) notes.push(estimate.note)
@@ -70,7 +69,7 @@ export function buildOutcome({ partId, locationId, severity }) {
     severity,
     notes,
     estimate: { minDays: estimate.minDays, maxDays: estimate.maxDays, label: estimate.label },
-    confirmWithTrainer: location?.alsoAction === 'see_trainer',
+    confirmWithTrainer: locations.some((l) => l.alsoAction === 'see_trainer'),
   }
 }
 

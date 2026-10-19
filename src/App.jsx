@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { rules, redFlagsFor, isTriggered, scoreSelfTests, buildOutcome } from './logic/triage'
+import { rules, redFlagsFor, isTriggered, scoreSelfTests, buildOutcome, worstAction } from './logic/triage'
 import { loadState, saveState } from './logic/storage'
 import { Intro } from './screens/Intro'
 import { PickPart, PickSide, PickLocation, RedFlag, SelfTest, HeadInjury } from './screens/Triage'
@@ -7,7 +7,7 @@ import { Result } from './screens/Result'
 import { Profile } from './screens/Profile'
 import { Home } from './screens/Home'
 
-const FRESH = { screen: 'intro', partId: null, side: null, location: null, flagIndex: 0, testIndex: 0, tests: {}, outcome: null }
+const FRESH = { screen: 'intro', partId: null, side: null, locations: [], flagIndex: 0, testIndex: 0, tests: {}, outcome: null }
 
 export default function App() {
   const [saved, setSaved] = useState(() => loadState())
@@ -30,12 +30,13 @@ export default function App() {
   }
   const finish = (outcome) => go({ screen: 'result', outcome })
 
-  const { screen, partId, location } = state
+  const { screen, partId, locations } = state
   const flags = partId ? redFlagsFor(partId) : []
 
   const afterFlags = () => {
     if (partId === 'other') return finish({ action: 'see_trainer', notes: [rules.otherPain.message] })
-    if (location?.effect === 'action') return finish({ action: location.action, notes: [location.note] })
+    const gated = locations.filter((l) => l.effect === 'action')
+    if (gated.length) return finish({ action: worstAction(...gated.map((l) => l.action)), notes: gated.map((l) => l.note) })
     go({ screen: 'test', testIndex: 0, tests: {} })
   }
 
@@ -62,12 +63,14 @@ export default function App() {
       return (
         <PickLocation
           partId={partId}
+          side={state.side}
           onBack={back}
-          onPick={(loc) => {
-            if (loc.effect === 'action' && loc.action === 'see_care_today') {
-              return go({ screen: 'result', location: loc, outcome: { action: 'see_care_today', notes: [loc.note] } })
+          onDone={(locs) => {
+            const urgent = locs.filter((l) => l.effect === 'action' && l.action === 'see_care_today')
+            if (urgent.length) {
+              return go({ screen: 'result', locations: locs, outcome: { action: 'see_care_today', notes: urgent.map((l) => l.note) } })
             }
-            go({ screen: 'flag', location: loc, flagIndex: 0 })
+            go({ screen: 'flag', locations: locs, flagIndex: 0 })
           }}
         />
       )
@@ -105,7 +108,7 @@ export default function App() {
             const answers = { ...state.tests, [test.id]: answer }
             if (state.testIndex + 1 < tests.length) return go({ tests: answers, testIndex: state.testIndex + 1 })
             const severity = scoreSelfTests(partId, answers)
-            finish(buildOutcome({ partId, locationId: location?.id, severity }))
+            finish(buildOutcome({ partId, locationIds: locations.map((l) => l.id), severity }))
           }}
         />
       )
@@ -135,7 +138,7 @@ export default function App() {
               injury: {
                 partId,
                 side: state.side,
-                locationId: location?.id ?? null,
+                locationIds: locations.map((l) => l.id),
                 outcome: state.outcome,
                 date: new Date().toISOString(),
               },

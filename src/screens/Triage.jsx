@@ -1,6 +1,8 @@
-import { useState } from 'react'
+import { lazy, Suspense, useState } from 'react'
 import { Screen, Choice } from '../components/Screen'
 import { BODY_PARTS, rules } from '../logic/triage'
+
+const Ankle3D = lazy(() => import('../components/Ankle3D'))
 
 const STEPS = 5
 
@@ -31,15 +33,50 @@ export function PickSide({ partId, onPick, onBack }) {
   )
 }
 
-export function PickLocation({ partId, onPick, onBack }) {
+export function PickLocation({ partId, side, onDone, onBack }) {
   const injury = rules.injuries[partId]
+  const [selected, setSelected] = useState([])
+  const [use3d, setUse3d] = useState(partId === 'ankle')
+  const toggle = (id) => setSelected((s) => (s.includes(id) ? s.filter((x) => x !== id) : [...s, id]))
+  const picked = injury.locations.filter((l) => selected.includes(l.id))
+
   return (
-    <Screen step={3} totalSteps={STEPS} onBack={onBack} title={injury.locationQuestion} subtitle="Where it hurts changes how long recovery takes.">
-      <div className="stack">
-        {injury.locations.map((l) => (
-          <Choice key={l.id} label={l.label} hint={l.hint} onClick={() => onPick(l)} />
-        ))}
-      </div>
+    <Screen
+      step={3}
+      totalSteps={STEPS}
+      onBack={onBack}
+      title={injury.locationQuestion}
+      subtitle={use3d ? 'Spin it with your finger. Tap every spot that hurts.' : 'Tap every spot that hurts.'}
+      stickyFooter
+      footer={
+        <div className="done-row">
+          <span className="muted">{selected.length ? `${selected.length} selected` : 'Pick at least one'}</span>
+          <button className="btn primary done" disabled={!selected.length} onClick={() => onDone(picked)}>
+            Done
+          </button>
+        </div>
+      }
+    >
+      {use3d ? (
+        <>
+          <Suspense fallback={<div className="ankle3d" />}>
+            <Ankle3D side={side} selected={selected} onToggle={toggle} onError={() => setUse3d(false)} />
+          </Suspense>
+          {picked.length > 0 && (
+            <div className="picked">
+              {picked.map((l) => (
+                <p key={l.id}><b>{l.label}.</b> {l.hint}</p>
+              ))}
+            </div>
+          )}
+        </>
+      ) : (
+        <div className="stack">
+          {injury.locations.map((l) => (
+            <Choice key={l.id} label={l.label} hint={l.hint} selected={selected.includes(l.id)} onClick={() => toggle(l.id)} />
+          ))}
+        </div>
+      )}
     </Screen>
   )
 }
@@ -98,7 +135,6 @@ export function HeadInjury({ onAnswer, onBack }) {
         <ul className="list">
           {head.emergencySigns.map((s) => <li key={s}>{s}</li>)}
         </ul>
-        <p className="source">Source: CDC HEADS UP</p>
       </div>
       <div className="row">
         <button className="btn yes" onClick={() => onAnswer(true)}>Yes</button>

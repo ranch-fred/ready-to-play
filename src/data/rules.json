@@ -172,7 +172,7 @@
           "question": "Can you take 4 steps on it right now? (Limping is OK.)",
           "triggerAnswer": false,
           "action": "see_care_today",
-          "note": "Ottawa Ankle Rules: unable to bear weight for 4 steps means it needs an X-ray check.",
+          "note": "Not being able to take 4 steps can mean a broken bone, so it needs an X-ray.",
           "sources": ["aafp_ankle_2012"]
         },
         {
@@ -180,7 +180,7 @@
           "question": "Press gently on the back edge and tip of the ankle bones on both sides, the bump on the outside middle of your foot, and the bump on the inside middle of your foot. Does it hurt right on the bone?",
           "triggerAnswer": true,
           "action": "see_care_today",
-          "note": "Ottawa Ankle/Foot Rules bony points: lateral/medial malleolus, base of 5th metatarsal, navicular.",
+          "note": "Pain right on the bone can mean a fracture, so it needs an X-ray.",
           "sources": ["aafp_ankle_2012"]
         }
       ],
