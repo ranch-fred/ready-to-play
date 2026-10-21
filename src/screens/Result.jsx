@@ -1,10 +1,11 @@
 import { useState } from 'react'
 import { Screen } from '../components/Screen'
 import { rules, addDays, formatDate } from '../logic/triage'
+import { paddedDays } from '../logic/recovery'
 
 const TONE = { emergency: 'danger', see_care_today: 'alert', see_trainer: 'caution', plan: 'good' }
 
-export function Result({ outcome, onContinue, onRestart, onBack }) {
+export function Result({ outcome, onContinue, onRestart, onBack, onFindCare }) {
   const action = rules.actions[outcome.action]
   const tone = TONE[outcome.action]
   const [today] = useState(() => new Date())
@@ -19,9 +20,12 @@ export function Result({ outcome, onContinue, onRestart, onBack }) {
             <button className="btn ghost" onClick={onRestart}>Back to start</button>
           </>
         ) : (
-          <button className="btn primary" onClick={onContinue}>
-            {outcome.action === 'plan' ? 'Save my plan' : 'Save and track my recovery'}
-          </button>
+          <>
+            {outcome.action !== 'plan' && <button className="btn primary" onClick={onFindCare}>Find care near me</button>}
+            <button className={`btn ${outcome.action === 'plan' ? 'primary' : 'ghost'}`} onClick={onContinue}>
+              {outcome.action === 'plan' ? 'Save my plan' : 'Save and track my recovery'}
+            </button>
+          </>
         )
       }
     >
@@ -40,9 +44,9 @@ export function Result({ outcome, onContinue, onRestart, onBack }) {
       {outcome.estimate && (
         <div className="card estimate">
           <p className="eyebrow">Estimated return</p>
-          <p className="big-date">{formatDate(addDays(today, outcome.estimate.maxDays))}</p>
+          <p className="big-date">{formatDate(addDays(today, paddedDays(outcome.estimate)))}</p>
           <p className="muted">
-            Could be as early as {formatDate(addDays(today, outcome.estimate.minDays))}. We start at the safe end and move it up as you improve.
+            Could be as early as {formatDate(addDays(today, outcome.estimate.minDays))}. We start at the safe end plus a 25% cushion, then move it up as your daily check-ins improve.
           </p>
           <p className="chip">{outcome.estimate.label}</p>
         </div>

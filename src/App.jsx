@@ -6,6 +6,9 @@ import { PickPart, PickSide, PickLocation, RedFlag, SelfTest } from './screens/T
 import { Result } from './screens/Result'
 import { Profile } from './screens/Profile'
 import { Home } from './screens/Home'
+import { CheckIn, CheckInResult } from './screens/CheckIn'
+import { Care } from './screens/Care'
+import { startPlan, applyCheckIn } from './logic/recovery'
 
 const FRESH = { screen: 'intro', partId: null, side: null, locations: [], flagIndex: 0, testIndex: 0, tests: {}, outcome: null }
 
@@ -29,6 +32,11 @@ export default function App() {
     setState(FRESH)
   }
   const finish = (outcome) => go({ screen: 'result', outcome })
+  const saveInjury = (injury) => {
+    const next = { ...saved, injury }
+    saveState(next)
+    setSaved(next)
+  }
 
   const { screen, partId, locations } = state
   const flags = partId ? redFlagsFor(partId) : []
@@ -114,7 +122,15 @@ export default function App() {
     }
 
     case 'result':
-      return <Result outcome={state.outcome} onBack={back} onRestart={restart} onContinue={() => go({ screen: 'profile' })} />
+      return (
+        <Result
+          outcome={state.outcome}
+          onBack={back}
+          onRestart={restart}
+          onFindCare={() => go({ screen: 'care' })}
+          onContinue={() => go({ screen: 'profile' })}
+        />
+      )
 
     case 'profile':
       return (
@@ -130,6 +146,7 @@ export default function App() {
                 locationIds: locations.map((l) => l.id),
                 outcome: state.outcome,
                 date: new Date().toISOString(),
+                plan: state.outcome.estimate ? startPlan(partId, state.outcome.estimate, state.tests) : null,
               },
             }
             saveState(next)
@@ -145,6 +162,9 @@ export default function App() {
         <Home
           profile={saved.profile}
           injury={saved.injury}
+          onUpdateInjury={saveInjury}
+          onCheckIn={(day) => go({ screen: 'checkin', day })}
+          onFindCare={() => go({ screen: 'care' })}
           onNewInjury={() => {
             if (!window.confirm('Start a new injury report? Your current plan will be replaced.')) return
             setHistory([])
@@ -152,6 +172,40 @@ export default function App() {
           }}
         />
       )
+
+    case 'checkin': {
+      const injury = saved.injury
+      return (
+        <CheckIn
+          partId={injury.partId}
+          onBack={back}
+          onSubmit={({ answers, flagged }) => {
+            const plan = applyCheckIn(injury.plan ?? startPlan(injury.partId, injury.outcome.estimate), {
+              partId: injury.partId,
+              day: state.day,
+              answers,
+              flagged,
+              minDays: injury.outcome.estimate.minDays,
+            })
+            saveInjury({ ...injury, plan })
+            setHistory([])
+            setState({ ...FRESH, screen: 'checkinResult' })
+          }}
+        />
+      )
+    }
+
+    case 'checkinResult':
+      return (
+        <CheckInResult
+          injury={saved.injury}
+          onDone={() => setState({ ...FRESH, screen: 'home' })}
+          onFindCare={() => go({ screen: 'care' })}
+        />
+      )
+
+    case 'care':
+      return <Care town={saved?.profile?.town} onBack={back} />
 
     default:
       return null

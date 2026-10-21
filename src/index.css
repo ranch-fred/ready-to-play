@@ -350,3 +350,11 @@ button, input { font: inherit; color: inherit; }
 .disclaimer { color: var(--muted); font-size: 12px; text-align: center; margin: 20px 0 0; }
 
 button:focus-visible, a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* Daily check-in, pain relief, and care finder */
+.btn.yes.on, .btn.no.on { border-color: var(--accent); background: rgba(46, 230, 122, 0.12); }
+.checkin-q { margin-top: 22px; }
+.was { color: var(--muted); font-size: 14px; text-decoration: line-through; margin: 2px 0 6px !important; }
+.place { display: block; color: inherit; text-decoration: none; }
+.place .go { color: var(--accent); font-weight: 700; font-size: 14px; }
+.demo-tools { margin-top: 8px; border-style: dashed; }
