@@ -8,6 +8,7 @@ import { Profile } from './screens/Profile'
 import { Home } from './screens/Home'
 import { CheckIn, CheckInResult } from './screens/CheckIn'
 import { Care } from './screens/Care'
+import { Loading } from './screens/Loading'
 import { startPlan, applyCheckIn } from './logic/recovery'
 
 const FRESH = { screen: 'intro', partId: null, side: null, locations: [], flagIndex: 0, testIndex: 0, tests: {}, outcome: null }
@@ -117,7 +118,10 @@ export default function App() {
             if (stop) return finish({ action: stop.action, notes: stop.note ? [stop.note] : [] })
             if (state.testIndex + 1 < tests.length) return go({ tests: answers, testIndex: state.testIndex + 1 })
             const { severity, addDays, notes, focus } = scoreAnswers(tests, answers)
-            finish(buildOutcome({ partId, locationIds: locations.map((l) => l.id), severity, addDays, notes, focus }))
+            const outcome = buildOutcome({ partId, locationIds: locations.map((l) => l.id), severity, addDays, notes, focus })
+            // A plan gets the loading screen, then goes straight to the home tabs. Anything else shows the result screen.
+            if (outcome.action === 'plan') return go({ screen: 'loading', tests: answers, outcome })
+            finish(outcome)
           }}
         />
       )
@@ -131,6 +135,29 @@ export default function App() {
           onRestart={restart}
           onFindCare={() => go({ screen: 'care' })}
           onContinue={() => go({ screen: 'profile' })}
+        />
+      )
+
+    case 'loading':
+      return (
+        <Loading
+          onDone={() => {
+            const next = {
+              profile: saved?.profile ?? null,
+              injury: {
+                partId,
+                side: state.side,
+                locationIds: locations.map((l) => l.id),
+                outcome: state.outcome,
+                date: new Date().toISOString(),
+                plan: startPlan(partId, state.outcome.estimate),
+              },
+            }
+            saveState(next)
+            setSaved(next)
+            setHistory([])
+            setState({ ...FRESH, screen: 'home' })
+          }}
         />
       )
 

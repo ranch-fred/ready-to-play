@@ -115,6 +115,18 @@ export function currentPhase(partId, dayNumber, totalDays) {
   }
 }
 
+// Day ranges for every phase, matching how currentPhase splits the timeline.
+export function phaseRanges(partId, totalDays) {
+  let start = 0
+  return rules.phaseTemplate.map((p, i, all) => {
+    const last = i === all.length - 1
+    const end = last ? totalDays : Math.min(totalDays, start + Math.round(p.shareOfTimeline * totalDays))
+    const range = { ...p, index: i, startDay: last ? totalDays : start + 1, endDay: end, steps: rules.injuries[partId].phases[p.id] || [] }
+    start = end
+    return range
+  })
+}
+
 export function addDays(date, days) {
   const d = new Date(date)
   d.setDate(d.getDate() + days)
