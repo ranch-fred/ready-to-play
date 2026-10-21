@@ -97,9 +97,9 @@ export function RedFlag({ flag, index, total, onAnswer, onBack }) {
 export function SelfTest({ test, index, total, side, onAnswer, onBack }) {
   const [pain, setPain] = useState(3)
   return (
-    <Screen step={5} totalSteps={STEPS} onBack={onBack} title="Quick self-test" subtitle={`Test ${index + 1} of ${total}`}>
+    <Screen step={5} totalSteps={STEPS} onBack={onBack} title="About your injury" subtitle={`Question ${index + 1} of ${total}`}>
       <p className="question">{test.question}</p>
-      {test.type === 'function' && side && (
+      {test.compare && side && (
         <p className="tip">Tip: try it on your {side === 'left' ? 'right' : 'left'} side first to compare.</p>
       )}
       {test.type === 'scale' ? (
@@ -119,7 +119,7 @@ export function SelfTest({ test, index, total, side, onAnswer, onBack }) {
       ) : (
         <div className="stack">
           {test.options.map((o) => (
-            <Choice key={o} label={o} onClick={() => onAnswer(o)} />
+            <Choice key={o.label} label={o.label} onClick={() => onAnswer(o.label)} />
           ))}
         </div>
       )}

@@ -1,0 +1,416 @@
+{
+  "about": "Questions asked after the athlete picks the injury and the spot that hurts. 'all' is asked for every spot of that injury, then each picked spot adds its own questions. Each option can add points (more points = more serious), add days to the estimate, add a note, add a 'focus' item to the recovery plan, or stop the flow and send the athlete to care.",
+
+  "painQuestion": {
+    "id": "pain",
+    "type": "scale",
+    "question": "How bad is the pain right now? (0-10)",
+    "stopAt": 8,
+    "stop": { "action": "see_care_today", "note": "Pain this bad needs a real check before any recovery plan." },
+    "points": [{ "atLeast": 7, "points": 3 }, { "atLeast": 4, "points": 2 }, { "atLeast": 2, "points": 1 }],
+    "maxPoints": 3
+  },
+
+  "ankle": {
+    "all": [
+      {
+        "id": "four_steps",
+        "question": "Right after it happened, and right now, could you take 4 steps on it? (Limping is OK.)",
+        "options": [
+          { "label": "Yes, both times", "points": 0 },
+          { "label": "Yes, but only with a bad limp", "points": 2 },
+          { "label": "No", "stop": { "action": "see_care_today", "note": "Not being able to take 4 steps can mean a broken bone, so it needs an X-ray." } }
+        ]
+      },
+      {
+        "id": "swelling",
+        "question": "How fast did it swell up?",
+        "options": [
+          { "label": "Little or no swelling", "points": 0 },
+          { "label": "Slowly, over a few hours", "points": 1 },
+          { "label": "It ballooned right away", "points": 3, "note": "Fast, big swelling usually means more of the ligament was torn." }
+        ]
+      },
+      {
+        "id": "history",
+        "question": "Have you hurt this ankle before?",
+        "options": [
+          { "label": "No, first time", "points": 0 },
+          { "label": "Once before", "points": 1, "focus": "Extra balance training. Re-sprains are most common in the first year after a sprain." },
+          { "label": "Many times, or it gives way a lot", "points": 2, "addDays": 7, "focus": "Wear a lace-up or semi-rigid brace for sports.", "note": "An ankle that keeps giving way can be chronic instability. Ask your trainer about it." }
+        ]
+      }
+    ],
+    "outside": [
+      {
+        "id": "ottawa_outside",
+        "question": "Press along the back edge and tip of the bone on the OUTSIDE of your ankle, and on the bump halfway down the outside of your foot. Does it hurt right on the bone?",
+        "options": [
+          { "label": "No, the pain is in the soft part", "points": 0 },
+          { "label": "Yes, right on the bone", "stop": { "action": "see_care_today", "note": "Pain right on the bone can mean a fracture, so it needs an X-ray." } }
+        ]
+      },
+      {
+        "id": "inversion",
+        "question": "Gently turn the sole of your foot inward, toward your other foot. How does the outside of your ankle feel?",
+        "compare": true,
+        "options": [
+          { "label": "Little or no pain", "points": 0 },
+          { "label": "Painful", "points": 1 },
+          { "label": "Very painful, or it feels loose", "points": 3, "focus": "Brace or tape the ankle for practice until your trainer clears you." }
+        ]
+      }
+    ],
+    "high": [
+      {
+        "id": "fibula",
+        "question": "Press along the bone on the outside of your lower leg, from the ankle up to just below the knee. Is any spot really sore right on the bone?",
+        "options": [
+          { "label": "No", "points": 0 },
+          { "label": "Yes", "stop": { "action": "see_care_today", "note": "High ankle injuries can come with a break higher up the leg bone. It needs an X-ray." } }
+        ]
+      },
+      {
+        "id": "squeeze",
+        "question": "Squeeze your two lower leg bones together about halfway up your shin. Does it hurt down near the ankle?",
+        "options": [
+          { "label": "No", "points": 0 },
+          { "label": "Yes", "points": 3, "note": "Pain near the ankle when you squeeze higher up is a common sign of a high ankle sprain." }
+        ]
+      },
+      {
+        "id": "turn_out",
+        "question": "Keep your knee still and turn your foot outward. Does it hurt above the ankle?",
+        "compare": true,
+        "options": [
+          { "label": "No", "points": 0 },
+          { "label": "A little", "points": 1 },
+          { "label": "A lot", "points": 3 }
+        ]
+      },
+      {
+        "id": "calf_raise",
+        "question": "Can you go up on your toes on just the hurt leg?",
+        "compare": true,
+        "options": [
+          { "label": "Yes, easily", "points": 0 },
+          { "label": "Yes, but it hurts", "points": 1 },
+          { "label": "No", "points": 3, "focus": "Walk with crutches or a walking boot until you can do a pain-free calf raise." }
+        ]
+      }
+    ],
+    "inside": [
+      {
+        "id": "ottawa_inside",
+        "question": "Press along the back edge and tip of the bone on the INSIDE of your ankle, and on the bump on the inside middle of your foot. Does it hurt right on the bone?",
+        "options": [
+          { "label": "No, the pain is in the soft part", "points": 0 },
+          { "label": "Yes, right on the bone", "stop": { "action": "see_care_today", "note": "Pain right on the bone can mean a fracture, so it needs an X-ray." } }
+        ]
+      },
+      {
+        "id": "eversion",
+        "question": "Gently turn the sole of your foot outward, away from your other foot. How does the inside of your ankle feel?",
+        "compare": true,
+        "options": [
+          { "label": "Little or no pain", "points": 0 },
+          { "label": "Painful", "points": 1 },
+          { "label": "Very painful, or it feels loose", "points": 3 }
+        ]
+      },
+      {
+        "id": "arch",
+        "question": "Standing up, does your arch look flatter than on your other foot?",
+        "options": [
+          { "label": "No", "points": 0 },
+          { "label": "Yes", "points": 2, "focus": "Ask your trainer about arch support while it heals." }
+        ]
+      }
+    ]
+  },
+
+  "shoulder": {
+    "all": [
+      {
+        "id": "cause",
+        "question": "How did it start?",
+        "options": [
+          { "label": "It built up from throwing, swimming, or serving", "points": 0, "focus": "Cut back throwing and overhead reps. Your sport phase builds them back up slowly." },
+          { "label": "I fell on it or got hit", "points": 1 },
+          { "label": "My arm got yanked or twisted back", "points": 2, "focus": "Avoid positions with your arm out to the side and behind you." }
+        ]
+      },
+      {
+        "id": "slipped",
+        "question": "Has your shoulder felt like it slipped or came out of place?",
+        "options": [
+          { "label": "No", "points": 0 },
+          { "label": "It feels loose or slips a little", "points": 2, "note": "A loose shoulder needs strengthening before overhead sports. Tell your trainer.", "focus": "Shoulder stability exercises before any overhead work." },
+          { "label": "It came out of place today", "stop": { "action": "see_care_today", "note": "A shoulder that came out of place needs a doctor to check it, even if it went back in." } }
+        ]
+      },
+      {
+        "id": "lift",
+        "question": "Can you raise your arm out to the side and all the way overhead?",
+        "options": [
+          { "label": "Yes, no pain", "points": 0 },
+          { "label": "Yes, but it hurts", "points": 1 },
+          { "label": "Only partway", "points": 2 },
+          { "label": "No", "stop": { "action": "see_care_today", "note": "Not being able to lift your arm can mean a torn tendon." } }
+        ]
+      },
+      {
+        "id": "night",
+        "question": "Does it hurt at night or wake you up?",
+        "options": [
+          { "label": "No", "points": 0 },
+          { "label": "Sometimes", "points": 1 },
+          { "label": "Most nights", "points": 2, "note": "Night pain is common with rotator cuff problems. Sleep propped up or with a pillow under your arm." }
+        ]
+      }
+    ],
+    "outer": [
+      {
+        "id": "painful_arc",
+        "question": "Slowly raise your arm out to the side. Is there a painful zone around shoulder height that gets easier higher up?",
+        "options": [
+          { "label": "No", "points": 0 },
+          { "label": "Yes", "points": 1, "focus": "Skip lifting through the painful zone for now. Work below shoulder height first." }
+        ]
+      },
+      {
+        "id": "rotate_out",
+        "question": "Arm at your side, elbow bent, push the back of your hand outward against a wall. How strong is it compared to the other side?",
+        "compare": true,
+        "options": [
+          { "label": "About the same", "points": 0 },
+          { "label": "Weaker, and it hurts", "points": 2 },
+          { "label": "Much weaker, can barely push", "stop": { "action": "see_trainer", "note": "Big weakness turning your arm out can mean a rotator cuff tear. Get it checked before starting a plan." } }
+        ]
+      }
+    ],
+    "front": [
+      {
+        "id": "biceps",
+        "question": "Bend your elbow and turn your palm up while someone pushes against it. Does the front of your shoulder hurt?",
+        "options": [
+          { "label": "No", "points": 0 },
+          { "label": "Yes", "points": 2, "focus": "The biceps tendon is involved. Go easy on curls, pulling, and hard throws." }
+        ]
+      },
+      {
+        "id": "catching",
+        "question": "Does the front of your shoulder click, catch, or feel unstable when you throw or reach?",
+        "options": [
+          { "label": "No", "points": 0 },
+          { "label": "Sometimes", "points": 2 },
+          { "label": "Often", "stop": { "action": "see_trainer", "note": "Clicking and catching can mean a labrum injury. Get it checked before starting a plan." } }
+        ]
+      }
+    ],
+    "top": [
+      {
+        "id": "bump",
+        "question": "Look in a mirror. Is there a bump on top of the hurt shoulder that the other side doesn't have?",
+        "options": [
+          { "label": "No", "points": 0 },
+          { "label": "A small bump", "points": 3, "note": "A small bump usually means a mild-to-moderate separation. Your trainer should confirm it." },
+          { "label": "A big bump or step", "stop": { "action": "see_care_today", "note": "A big bump on top can be a more serious separation and needs a doctor." } }
+        ]
+      },
+      {
+        "id": "ac_press",
+        "question": "Press on the joint where your collarbone meets the top of your shoulder. How does it feel?",
+        "options": [
+          { "label": "A little sore", "points": 0 },
+          { "label": "Painful", "points": 2 },
+          { "label": "Very painful", "points": 3 }
+        ]
+      },
+      {
+        "id": "cross_body",
+        "question": "Reach your hurt arm across your chest to touch your other shoulder. How does the top of your shoulder feel?",
+        "options": [
+          { "label": "Fine", "points": 0 },
+          { "label": "Painful", "points": 2 },
+          { "label": "Too painful to do", "points": 3 }
+        ]
+      }
+    ]
+  },
+
+  "hamstring": {
+    "all": [
+      {
+        "id": "cause",
+        "question": "How did it happen?",
+        "options": [
+          { "label": "Sprinting or speeding up", "points": 0, "focus": "Your last phase builds up sprinting step by step." },
+          { "label": "Kicking, doing splits, or a big stretch", "points": 2, "addDays": 7, "note": "Stretch-type strains often take longer to heal than they feel like they will." },
+          { "label": "It got tight over time", "points": 0 }
+        ]
+      },
+      {
+        "id": "kept_playing",
+        "question": "Could you keep playing after it happened?",
+        "options": [
+          { "label": "Yes", "points": 0 },
+          { "label": "Yes, but slower", "points": 1 },
+          { "label": "No, I had to stop right away", "points": 2 }
+        ]
+      },
+      {
+        "id": "walk",
+        "question": "How are you walking?",
+        "options": [
+          { "label": "Normally", "points": 0 },
+          { "label": "With a small limp", "points": 2 },
+          { "label": "With a big limp, or I can't", "stop": { "action": "see_care_today", "note": "Not being able to walk normally can mean a bad tear." } }
+        ]
+      },
+      {
+        "id": "leg_raise",
+        "question": "Lying on your back, lift your straight hurt leg as high as it goes without pain. Compared to the other leg, how high?",
+        "compare": true,
+        "options": [
+          { "label": "About the same", "points": 0 },
+          { "label": "A bit lower", "points": 1 },
+          { "label": "Much lower", "points": 3, "addDays": 7 }
+        ]
+      },
+      {
+        "id": "bruise",
+        "question": "Is there bruising on the back of your thigh?",
+        "options": [
+          { "label": "None", "points": 0 },
+          { "label": "A little", "points": 1 },
+          { "label": "A lot, spreading down the leg", "stop": { "action": "see_care_today", "note": "Heavy bruising can mean the tendon pulled off the bone." } }
+        ]
+      }
+    ],
+    "middle": [
+      {
+        "id": "bend_knee",
+        "question": "Lying on your stomach, bend your knee against light resistance. How does it feel?",
+        "options": [
+          { "label": "No pain", "points": 0 },
+          { "label": "Some pain", "points": 1 },
+          { "label": "Very painful or weak", "points": 3 }
+        ]
+      },
+      {
+        "id": "gap",
+        "question": "Press gently along the back of your thigh. Can you feel a dent or gap in the muscle?",
+        "options": [
+          { "label": "No", "points": 0 },
+          { "label": "Yes", "stop": { "action": "see_care_today", "note": "A dent or gap can mean a complete tear." } }
+        ]
+      }
+    ],
+    "upper": [],
+    "lower": []
+  },
+
+  "wrist": {
+    "all": [
+      {
+        "id": "cause",
+        "question": "How did it happen?",
+        "options": [
+          { "label": "I fell on an outstretched hand", "points": 1 },
+          { "label": "I twisted or bent it", "points": 0 },
+          { "label": "It built up from use", "points": 0 }
+        ]
+      },
+      {
+        "id": "fist",
+        "question": "Can you move all your fingers and make a full fist?",
+        "options": [
+          { "label": "Yes", "points": 0 },
+          { "label": "Yes, but it hurts", "points": 1 },
+          { "label": "No", "stop": { "action": "see_care_today" } }
+        ]
+      },
+      {
+        "id": "grip",
+        "question": "Can you grip a water bottle and twist the cap?",
+        "options": [
+          { "label": "Yes, no pain", "points": 0 },
+          { "label": "Yes, but it hurts", "points": 1 },
+          { "label": "No", "points": 3 }
+        ]
+      },
+      {
+        "id": "swelling",
+        "question": "How swollen is it?",
+        "options": [
+          { "label": "None", "points": 0 },
+          { "label": "A little", "points": 1 },
+          { "label": "A lot", "points": 3 }
+        ]
+      }
+    ],
+    "thumb": [
+      {
+        "id": "snuffbox",
+        "question": "Give a thumbs-up. Press in the little hollow at the base of your thumb on the back of your wrist. Does it hurt there?",
+        "options": [
+          { "label": "No", "points": 0 },
+          { "label": "Yes", "stop": { "action": "see_care_today", "note": "Pain here can mean a scaphoid fracture, which is often mistaken for a sprain." } }
+        ]
+      },
+      {
+        "id": "pinch",
+        "question": "Pinch something firm between your thumb and first finger. How does it feel?",
+        "compare": true,
+        "options": [
+          { "label": "Fine", "points": 0 },
+          { "label": "Painful", "points": 1 },
+          { "label": "Too painful to do", "points": 3, "focus": "A thumb splint can protect it during the first phase." }
+        ]
+      }
+    ],
+    "back": [
+      {
+        "id": "push_up",
+        "question": "Push up from a chair with your hands flat. How does the back of your wrist feel?",
+        "options": [
+          { "label": "Fine", "points": 0 },
+          { "label": "Painful", "points": 1, "focus": "Avoid push-ups and weight on your hands until the strength phase." },
+          { "label": "Too painful to do", "points": 3, "focus": "Avoid push-ups and weight on your hands until the strength phase." }
+        ]
+      },
+      {
+        "id": "back_bend",
+        "question": "Bend your hand back (like a stop sign). How does it feel?",
+        "compare": true,
+        "options": [
+          { "label": "Fine", "points": 0 },
+          { "label": "Painful", "points": 1 },
+          { "label": "Very painful or stiff", "points": 3 }
+        ]
+      }
+    ],
+    "pinky": [
+      {
+        "id": "rotate",
+        "question": "Turn your palm up and down like turning a doorknob. What happens on the pinky side?",
+        "options": [
+          { "label": "Nothing, it's fine", "points": 0 },
+          { "label": "It hurts", "points": 2 },
+          { "label": "It clicks and hurts", "stop": { "action": "see_trainer", "note": "Clicking on the pinky side can be a cartilage (TFCC) tear. Get it checked before starting a plan." } }
+        ]
+      },
+      {
+        "id": "pinky_bend",
+        "question": "Bend your wrist toward your pinky side. How does it feel?",
+        "compare": true,
+        "options": [
+          { "label": "Fine", "points": 0 },
+          { "label": "Painful", "points": 1 },
+          { "label": "Very painful", "points": 3 }
+        ]
+      }
+    ]
+  }
+}

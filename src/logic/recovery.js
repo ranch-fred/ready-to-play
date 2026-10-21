@@ -1,5 +1,4 @@
 import recovery from '../data/recovery.json'
-import { rules } from './triage'
 
 // Symptom score from 0 (no symptoms) to 1 (worst). Works for both the first self-test and daily check-ins:
 // pain is 0-10, and every multiple-choice answer is scored by its position (first option = best).
@@ -25,9 +24,9 @@ export function paddedDays(estimate) {
 }
 
 // Called once when the plan is saved. The first estimate is the safe end of the range plus the cushion.
-export function startPlan(partId, estimate, selfTestAnswers) {
+// The first daily check-in becomes the baseline that later check-ins are compared to.
+export function startPlan(partId, estimate, baseline = null) {
   const padded = paddedDays(estimate)
-  const baseline = selfTestAnswers ? symptomScore(rules.injuries[partId].selfTests, selfTestAnswers) : null
   return { padded, projected: padded, baseline, checkIns: [], worseStreak: 0, lastResult: null }
 }
 

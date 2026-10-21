@@ -94,7 +94,7 @@ export function Home({ profile, injury, onNewInjury, onCheckIn, onFindCare, onUp
       )}
 
       {outcome.confirmWithTrainer && (
-        <div className="card note"><p>Have your athletic trainer or a doctor confirm this is a high ankle sprain.</p></div>
+        <div className="card note"><p>Have your athletic trainer or a doctor confirm what this injury is.</p></div>
       )}
 
       {phase && (
@@ -103,6 +103,17 @@ export function Home({ profile, injury, onNewInjury, onCheckIn, onFindCare, onUp
           <h3 className="card-title">{phase.name}</h3>
           <ul className="list">
             {phase.steps.map((s) => <li key={s}>{s}</li>)}
+          </ul>
+        </div>
+      )}
+
+      {plan && (outcome.focus?.length > 0 || outcome.notes?.length > 0) && (
+        <div className="card">
+          <p className="eyebrow">Based on your answers</p>
+          <h3 className="card-title">Your plan's focus</h3>
+          <ul className="list">
+            {outcome.focus?.map((f) => <li key={f}><b>{f}</b></li>)}
+            {outcome.notes?.map((n) => <li key={n}>{n}</li>)}
           </ul>
         </div>
       )}

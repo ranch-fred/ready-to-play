@@ -41,6 +41,15 @@ export function Result({ outcome, onContinue, onRestart, onBack, onFindCare }) {
         <div key={n} className="card note"><p>{n}</p></div>
       ))}
 
+      {outcome.focus?.length > 0 && (
+        <div className="card">
+          <p className="card-title">Your plan's focus</p>
+          <ul className="list">
+            {outcome.focus.map((f) => <li key={f}>{f}</li>)}
+          </ul>
+        </div>
+      )}
+
       {outcome.estimate && (
         <div className="card estimate">
           <p className="eyebrow">Estimated return</p>

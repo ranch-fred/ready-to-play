@@ -34,34 +34,6 @@
       "action": "see_care_today",
       "note": "Any possible head injury goes to the trainer under the school's concussion protocol. No plan is ever built.",
       "sources": ["cdc_headsup"]
-    },
-    {
-      "id": "chest_breathing",
-      "question": "Do you have chest pain or trouble breathing?",
-      "triggerAnswer": true,
-      "action": "emergency",
-      "sources": ["plan"]
-    },
-    {
-      "id": "numb_cold",
-      "question": "Is the injured area numb, tingling, cold, or does it feel weak?",
-      "triggerAnswer": true,
-      "action": "see_care_today",
-      "sources": ["aafp_ankle_2006", "medline_hamstring", "medline_wrist"]
-    },
-    {
-      "id": "deformity_pop",
-      "question": "Does it look bent or out of place, or did you hear or feel a 'pop' when it happened?",
-      "triggerAnswer": true,
-      "action": "see_care_today",
-      "sources": ["aaos_soft_tissue", "hopkins_rotator_cuff"]
-    },
-    {
-      "id": "severe_pain",
-      "question": "Is the pain 8 out of 10 or worse, or did it swell up very fast?",
-      "triggerAnswer": true,
-      "action": "see_care_today",
-      "sources": ["aafp_ankle_2006"]
     }
   ],
 
@@ -160,10 +132,24 @@
           "id": "inside",
           "label": "Inside of the ankle",
           "hint": "Your foot rolled outward.",
-          "effect": "action",
-          "action": "see_trainer",
-          "note": "Inside-ankle sprains are less common and harder to judge at home. A trainer or doctor should check it before you start a plan.",
-          "sources": ["cleveland_high_ankle"]
+          "effect": "estimate_override",
+          "note": "Inside-ankle sprains are less common and usually take longer than outside ones. Have your trainer or a doctor confirm it.",
+          "alsoAction": "see_trainer",
+          "estimates": {
+            "mild": {
+              "minDays": 21,
+              "maxDays": 35,
+              "label": "Inside ankle sprain"
+            },
+            "moderate": {
+              "minDays": 35,
+              "maxDays": 56,
+              "label": "Inside ankle sprain"
+            }
+          },
+          "sources": [
+            "cleveland_high_ankle"
+          ]
         }
       ],
       "redFlags": [
@@ -230,10 +216,24 @@
           "id": "top",
           "label": "Top of the shoulder",
           "hint": "Often after falling on your shoulder or getting hit on it.",
-          "effect": "action",
-          "action": "see_trainer",
+          "effect": "estimate_override",
           "note": "Pain on top after a fall or hit can be a shoulder separation (AC joint). Mild ones heal in about 2 weeks, worse ones take 6-8 weeks or more, and only an exam can tell which. A bump on top means see care today.",
-          "sources": ["cleveland_separated", "hopkins_ac"]
+          "alsoAction": "see_trainer",
+          "estimates": {
+            "mild": {
+              "minDays": 14,
+              "maxDays": 21,
+              "label": "Mild shoulder separation (AC joint)"
+            },
+            "moderate": {
+              "action": "see_trainer",
+              "note": "Moderate separations can take 6-8 weeks or more. Your trainer or a doctor sets the timeline."
+            }
+          },
+          "sources": [
+            "cleveland_separated",
+            "hopkins_ac"
+          ]
         }
       ],
       "redFlags": [
@@ -385,10 +385,24 @@
           "id": "pinky",
           "label": "Pinky side",
           "hint": "Might click or pop when you turn your wrist.",
-          "effect": "action",
-          "action": "see_trainer",
-          "note": "Pinky-side pain can be a cartilage injury (TFCC) that heals slower than a normal sprain. Get it checked before starting a plan.",
-          "sources": ["cleveland_tfcc", "pmc_wrist_sports"]
+          "effect": "estimate_override",
+          "note": "Pinky-side pain can be a cartilage injury (TFCC) that heals slower than a normal sprain. Have your trainer or a doctor confirm it.",
+          "alsoAction": "see_trainer",
+          "estimates": {
+            "mild": {
+              "minDays": 21,
+              "maxDays": 42,
+              "label": "Possible cartilage (TFCC) strain"
+            },
+            "moderate": {
+              "action": "see_trainer",
+              "note": "Pinky-side injuries that hurt this much need an exam before a plan."
+            }
+          },
+          "sources": [
+            "cleveland_tfcc",
+            "pmc_wrist_sports"
+          ]
         }
       ],
       "redFlags": [

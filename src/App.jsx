@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { rules, redFlagsFor, isTriggered, scoreSelfTests, buildOutcome, worstAction } from './logic/triage'
+import { rules, redFlagsFor, isTriggered, tailoredQuestions, stopFor, scoreAnswers, buildOutcome, worstAction } from './logic/triage'
 import { loadState, saveState } from './logic/storage'
 import { Intro } from './screens/Intro'
 import { PickPart, PickSide, PickLocation, RedFlag, SelfTest } from './screens/Triage'
@@ -39,7 +39,7 @@ export default function App() {
   }
 
   const { screen, partId, locations } = state
-  const flags = partId ? redFlagsFor(partId) : []
+  const flags = partId ? redFlagsFor() : []
 
   const afterFlags = () => {
     if (partId === 'other') return finish({ action: 'see_trainer', notes: [rules.otherPain.message] })
@@ -101,7 +101,7 @@ export default function App() {
     }
 
     case 'test': {
-      const tests = rules.injuries[partId].selfTests
+      const tests = tailoredQuestions(partId, locations.map((l) => l.id))
       const test = tests[state.testIndex]
       return (
         <SelfTest
@@ -113,9 +113,11 @@ export default function App() {
           onBack={back}
           onAnswer={(answer) => {
             const answers = { ...state.tests, [test.id]: answer }
+            const stop = stopFor(test, answer)
+            if (stop) return finish({ action: stop.action, notes: stop.note ? [stop.note] : [] })
             if (state.testIndex + 1 < tests.length) return go({ tests: answers, testIndex: state.testIndex + 1 })
-            const severity = scoreSelfTests(partId, answers)
-            finish(buildOutcome({ partId, locationIds: locations.map((l) => l.id), severity }))
+            const { severity, addDays, notes, focus } = scoreAnswers(tests, answers)
+            finish(buildOutcome({ partId, locationIds: locations.map((l) => l.id), severity, addDays, notes, focus }))
           }}
         />
       )
@@ -146,7 +148,7 @@ export default function App() {
                 locationIds: locations.map((l) => l.id),
                 outcome: state.outcome,
                 date: new Date().toISOString(),
-                plan: state.outcome.estimate ? startPlan(partId, state.outcome.estimate, state.tests) : null,
+                plan: state.outcome.estimate ? startPlan(partId, state.outcome.estimate) : null,
               },
             }
             saveState(next)
