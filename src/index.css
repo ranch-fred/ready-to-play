@@ -219,6 +219,8 @@ button, input { font: inherit; color: inherit; }
 .card.danger { border-color: rgba(255, 90, 90, 0.5); }
 .card.cleared { border-style: dashed; }
 .list { margin: 0; padding-left: 20px; display: grid; gap: 6px; }
+.list li::marker { color: var(--accent); }
+.list + .muted, .list + p { margin-top: 12px !important; }
 .eyebrow { color: var(--muted); font-size: 12px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; margin: 0 0 4px !important; }
 .muted { color: var(--muted); font-size: 14px; }
 .chip {
@@ -409,6 +411,10 @@ button:focus-visible, a:focus-visible { outline: 2px solid var(--accent); outlin
 
 /* Path map */
 .path { position: relative; display: flex; flex-direction: column; align-items: center; gap: 28px; padding: 12px 0 24px; }
+.path-line { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+.path-line-track { fill: none; stroke: rgba(255, 255, 255, 0.14); stroke-width: 3; stroke-linecap: round; }
+.path-line-done { fill: none; stroke: var(--accent); stroke-width: 3; stroke-linecap: round; }
+.path-line-glow { fill: none; stroke: var(--accent); stroke-width: 10; stroke-linecap: round; opacity: 0.25; filter: blur(4px); }
 .path-stop { position: relative; display: flex; flex-direction: column; align-items: center; width: 100%; }
 .path-node {
   width: 72px; height: 72px; border-radius: 50%; border: 0; cursor: pointer;

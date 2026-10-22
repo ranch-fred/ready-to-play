@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { rules, addDays, formatDate, daysBetween, currentPhase, phaseRanges } from '../logic/triage'
 import { recovery, startPlan } from '../logic/recovery'
 
@@ -153,9 +153,10 @@ export function Home({ profile, injury, onNewInjury, onCheckIn, onFindCare, onUp
       {tab === 'plan' && (
         <>
           <h1 className="title">Recovery plan</h1>
+          {phase && <p className="subtitle">Stage {phase.index + 1} of {phase.count} · {phase.name}</p>}
           {phase ? (
             <div className="card">
-              <p className="eyebrow">Today · Stage {phase.index + 1} of {phase.count}</p>
+              <p className="eyebrow">Today</p>
               <h3 className="card-title">{phase.name}</h3>
               <ul className="list">
                 {phase.steps.map((s) => <li key={s}>{s}</li>)}
@@ -183,6 +184,7 @@ export function Home({ profile, injury, onNewInjury, onCheckIn, onFindCare, onUp
 
           {tips && (
             <div className="card">
+              <p className="eyebrow">In the meantime</p>
               <h3 className="card-title">Pain relief</h3>
               <ul className="list">
                 {tips.map((t) => <li key={t}>{t}</li>)}
@@ -201,6 +203,7 @@ export function Home({ profile, injury, onNewInjury, onCheckIn, onFindCare, onUp
       {tab === 'map' && (
         <>
           <h1 className="title">Your path</h1>
+          {plan && <p className="subtitle">{phase.count}-stage plan · started {formatDate(new Date(injury.date))}</p>}
           {plan ? (
             <PathMap partId={injury.partId} total={plan.projected} current={phase.index} startDate={injury.date} />
           ) : (
@@ -223,14 +226,73 @@ export function Home({ profile, injury, onNewInjury, onCheckIn, onFindCare, onUp
   )
 }
 
+function smoothPath(pts) {
+  if (pts.length < 2) return ''
+  let path = `M ${pts[0].x} ${pts[0].y}`
+  for (let i = 1; i < pts.length; i++) {
+    const prev = pts[i - 1]
+    const cur = pts[i]
+    const midY = (prev.y + cur.y) / 2
+    path += ` C ${prev.x} ${midY}, ${cur.x} ${midY}, ${cur.x} ${cur.y}`
+  }
+  return path
+}
+
+function PathLine({ containerRef, current, deps }) {
+  const [paths, setPaths] = useState(null)
+
+  useEffect(() => {
+    const container = containerRef.current
+    if (!container) return
+    const measure = () => {
+      const base = container.getBoundingClientRect()
+      const nodes = container.querySelectorAll('.path-node')
+      const pts = Array.from(nodes).map((n) => {
+        const r = n.getBoundingClientRect()
+        return { x: r.left + r.width / 2 - base.left, y: r.top + r.height / 2 - base.top }
+      })
+      if (pts.length < 2) return setPaths(null)
+      const doneEnd = Math.min(Math.max(current, 0), pts.length - 1)
+      setPaths({
+        track: smoothPath(pts),
+        done: doneEnd > 0 ? smoothPath(pts.slice(0, doneEnd + 1)) : '',
+      })
+    }
+    measure()
+    const ro = new ResizeObserver(measure)
+    ro.observe(container)
+    window.addEventListener('resize', measure)
+    return () => {
+      ro.disconnect()
+      window.removeEventListener('resize', measure)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [current, ...deps])
+
+  if (!paths) return null
+  return (
+    <svg className="path-line" aria-hidden="true">
+      <path d={paths.track} className="path-line-track" />
+      {paths.done && (
+        <>
+          <path d={paths.done} className="path-line-glow" />
+          <path d={paths.done} className="path-line-done" />
+        </>
+      )}
+    </svg>
+  )
+}
+
 function PathMap({ partId, total, current, startDate }) {
   const stages = phaseRanges(partId, total)
   const [open, setOpen] = useState(current)
   const start = new Date(startDate).setHours(0, 0, 0, 0)
   const OFFSETS = [0, 60, 0, -60, 0]
+  const containerRef = useRef(null)
 
   return (
-    <div className="path">
+    <div className="path" ref={containerRef}>
+      <PathLine containerRef={containerRef} current={current} deps={[open, stages.length]} />
       {stages.map((s, i) => {
         const state = i < current ? 'done' : i === current ? 'now' : 'locked'
         const last = i === stages.length - 1
