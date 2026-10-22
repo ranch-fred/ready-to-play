@@ -44,11 +44,11 @@ export default function App() {
   const { screen, partId, locations } = state
   const flags = partId ? redFlagsFor() : []
 
-  const afterFlags = () => {
-    if (partId === 'other') return finish({ action: 'see_trainer', notes: [rules.otherPain.message] })
-    const gated = locations.filter((l) => l.effect === 'action')
-    if (gated.length) return finish({ action: worstAction(...gated.map((l) => l.action)), notes: gated.map((l) => l.note) })
-    go({ screen: 'test', testIndex: 0, tests: {} })
+  const afterFlags = (locs = locations, extra = {}) => {
+    if (partId === 'other' || extra.partId === 'other') return go({ ...extra, screen: 'result', outcome: { action: 'see_trainer', notes: [rules.otherPain.message] } })
+    const gated = locs.filter((l) => l.effect === 'action')
+    if (gated.length) return go({ ...extra, screen: 'result', locations: locs, outcome: { action: worstAction(...gated.map((l) => l.action)), notes: gated.map((l) => l.note) } })
+    go({ ...extra, screen: 'test', locations: locs, testIndex: 0, tests: {} })
   }
 
   switch (screen) {
@@ -60,7 +60,7 @@ export default function App() {
         <PickPart
           onBack={back}
           onPick={(id) => {
-            if (id === 'other') return go({ screen: 'flag', partId: 'other', flagIndex: 0 })
+            if (id === 'other') return flags.length || redFlagsFor().length ? go({ screen: 'flag', partId: 'other', flagIndex: 0 }) : afterFlags([], { partId: 'other' })
             go({ screen: 'side', partId: id })
           }}
         />
@@ -80,6 +80,7 @@ export default function App() {
             if (urgent.length) {
               return go({ screen: 'result', locations: locs, outcome: { action: 'see_care_today', notes: urgent.map((l) => l.note) } })
             }
+            if (!flags.length) return afterFlags(locs)
             go({ screen: 'flag', locations: locs, flagIndex: 0 })
           }}
         />
@@ -196,9 +197,8 @@ export default function App() {
           profile={saved.profile}
           injury={saved.injury}
           onUpdateInjury={saveInjury}
-          onStartSession={(sets) => go({ screen: 'session', sets, homeTab: 'today' })}
+          onStartSession={() => go({ screen: 'session', homeTab: 'today' })}
           onCheckIn={(day) => go({ screen: 'checkin', day })}
-          onFindCare={() => go({ screen: 'care' })}
           onNewInjury={() => {
             if (!window.confirm('Start a new injury report? Your current plan will be replaced.')) return
             setHistory([])
@@ -248,13 +248,12 @@ export default function App() {
           partId={injury.partId}
           side={injury.side}
           today={today}
-          sets={state.sets}
           onExit={() => {
             setHistory([])
             setState({ ...FRESH, screen: 'home', homeTab: 'today' })
           }}
-          onFinish={(sets) => {
-            saveInjury({ ...injury, plan: { ...plan, sessions: { ...plan.sessions, [day]: { sets, stage: today.stage } } } })
+          onFinish={() => {
+            saveInjury({ ...injury, plan: { ...plan, sessions: { ...plan.sessions, [day]: { rounds: today.rounds, stage: today.stage } } } })
             setHistory([])
             setState({ ...FRESH, screen: 'home', homeTab: 'home' })
           }}
@@ -263,7 +262,20 @@ export default function App() {
     }
 
     case 'care':
-      return <Care town={saved?.profile?.town} onBack={back} />
+      {
+        const inj = saved?.injury
+        const fromTriage = !!state.outcome
+        return (
+          <Care
+            partId={fromTriage ? partId : inj?.partId}
+            outcome={fromTriage ? state.outcome : inj?.outcome}
+            lastResult={fromTriage ? null : inj?.plan?.lastResult}
+            stage={0}
+            town={saved?.profile?.town}
+            onBack={back}
+          />
+        )
+      }
 
     default:
       return null

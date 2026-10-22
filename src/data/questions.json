@@ -37,7 +37,7 @@
         "options": [
           { "label": "No, first time", "points": 0 },
           { "label": "Once before", "points": 1, "focus": "Extra balance training. Re-sprains are most common in the first year after a sprain." },
-          { "label": "Many times, or it gives way a lot", "points": 2, "addDays": 7, "focus": "Wear a lace-up or semi-rigid brace for sports.", "note": "An ankle that keeps giving way can be chronic instability. Ask your trainer about it." }
+          { "label": "Many times, or it gives way a lot", "points": 2, "addDays": 7, "focus": "Wear a lace-up or semi-rigid brace for sports.", "note": "An ankle that keeps giving way can be chronic instability. Ask a doctor about it." }
         ]
       }
     ],
@@ -57,7 +57,7 @@
         "options": [
           { "label": "Little or no pain", "points": 0 },
           { "label": "Painful", "points": 1 },
-          { "label": "Very painful, or it feels loose", "points": 3, "focus": "Brace or tape the ankle for practice until your trainer clears you." }
+          { "label": "Very painful, or it feels loose", "points": 3, "focus": "Brace or tape the ankle for practice until a doctor clears you." }
         ]
       }
     ],
@@ -123,7 +123,7 @@
         "question": "Standing up, does your arch look flatter than on your other foot?",
         "options": [
           { "label": "No", "points": 0 },
-          { "label": "Yes", "points": 2, "focus": "Ask your trainer about arch support while it heals." }
+          { "label": "Yes", "points": 2, "focus": "Ask a doctor about arch support while it heals." }
         ]
       }
     ]
@@ -145,7 +145,7 @@
         "question": "Has your shoulder felt like it slipped or came out of place?",
         "options": [
           { "label": "No", "points": 0 },
-          { "label": "It feels loose or slips a little", "points": 2, "note": "A loose shoulder needs strengthening before overhead sports. Tell your trainer.", "focus": "Shoulder stability exercises before any overhead work." },
+          { "label": "It feels loose or slips a little", "points": 2, "note": "A loose shoulder needs strengthening before overhead sports. Tell a doctor.", "focus": "Shoulder stability exercises before any overhead work." },
           { "label": "It came out of place today", "stop": { "action": "see_care_today", "note": "A shoulder that came out of place needs a doctor to check it, even if it went back in." } }
         ]
       },
@@ -214,7 +214,7 @@
         "question": "Look in a mirror. Is there a bump on top of the hurt shoulder that the other side doesn't have?",
         "options": [
           { "label": "No", "points": 0 },
-          { "label": "A small bump", "points": 3, "note": "A small bump usually means a mild-to-moderate separation. Your trainer should confirm it." },
+          { "label": "A small bump", "points": 3, "note": "A small bump usually means a mild-to-moderate separation. A doctor should confirm it." },
           { "label": "A big bump or step", "stop": { "action": "see_care_today", "note": "A big bump on top can be a more serious separation and needs a doctor." } }
         ]
       },

@@ -1,7 +1,6 @@
 import { rules, addDays, daysBetween } from './triage'
 import { checkInQuestions } from './recovery'
 import { PROGRAM, exercise } from '../data/exercises'
-import { period } from './motion'
 
 // Today's stage comes from how the athlete answered their latest check-in, not just the calendar.
 // Going from "can't put weight on it" to "walking with a limp" moves the plan up right away; a worse day
@@ -9,6 +8,9 @@ import { period } from './motion'
 // strength work waits until about a quarter of the shortest expected recovery, sport drills until half.
 
 export const STAGES = rules.phaseTemplate
+export const ROUNDS = 3
+export const WORK_SECONDS = 30
+export const BREAK_SECONDS = 5
 
 const STAGE = { protect: 0, motion: 1, strength: 2, sport: 3, return: 4 }
 
@@ -19,35 +21,47 @@ function level(partId, answers, id) {
   return Math.max(0, q.options.indexOf(answers[id]))
 }
 
-// What the athlete can do today, as a stage, from one set of check-in answers.
-function stageFromAnswers(partId, answers) {
+// What it takes to reach each stage, checked against the latest check-in answers. GOALS[part][n] are the
+// goals for stage n (1 = Gentle movement, 2 = Build strength, 3 = Sport drills). The athlete is at the highest
+// stage whose goals, and every earlier stage's goals, are all met. The Map shows these as a checklist.
+// L(id) is the answer's position: 0 = best, 1 = middle, 2 = worst.
+const GOALS = {
+  ankle: {
+    1: [['Put weight on it', (L) => L('walk') < 2], ['Swelling going down', (L) => L('swelling') < 2], ['Pain below 7', (L, p) => p < 7]],
+    2: [['Walk without a limp', (L) => L('walk') === 0], ['Ankle moves partway', (L) => L('rom') < 2], ['Pain below 4', (L, p) => p < 4]],
+    3: [['Steady on one foot', (L) => L('balance') === 0], ['Ankle moves all the way', (L) => L('rom') === 0], ['No swelling', (L) => L('swelling') === 0], ['Pain 0-1', (L, p) => p < 2]],
+  },
+  shoulder: {
+    1: [['Everyday things possible', (L) => L('daily') < 2], ['Arm lifts partway', (L) => L('overhead') < 2], ['Sleeping through the night', (L) => L('night') < 2], ['Pain below 7', (L, p) => p < 7]],
+    2: [['Arm overhead, no pain', (L) => L('overhead') === 0], ['Can reach behind back', (L) => L('reach_back') < 2], ['Pain below 4', (L, p) => p < 4]],
+    3: [['Reach back, no pain', (L) => L('reach_back') === 0], ['Everyday things, no pain', (L) => L('daily') === 0], ['No pain at night', (L) => L('night') === 0], ['Pain 0-1', (L, p) => p < 2]],
+  },
+  hamstring: {
+    1: [['Walking, even with a limp', (L) => L('walk') < 2], ['Can bend the knee', (L) => L('bend_knee') < 2], ['Pain below 7', (L, p) => p < 7]],
+    2: [['Walk without a limp', (L) => L('walk') === 0], ['Gentle stretch is OK', (L) => L('stretch') < 2], ['Pain below 4', (L, p) => p < 4]],
+    3: [['Ready to jog', (L) => L('jog') === 0], ['Stretch feels easy', (L) => L('stretch') === 0], ['Knee bend, no pain', (L) => L('bend_knee') === 0], ['Pain 0-1', (L, p) => p < 2]],
+  },
+  wrist: {
+    1: [['Wrist bends', (L) => L('bend') < 2], ['Swelling going down', (L) => L('swelling') < 2], ['Pain below 7', (L, p) => p < 7]],
+    2: [['Bends without pain', (L) => L('bend') === 0], ['Can grip a bottle', (L) => L('grip') < 2], ['Pain below 4', (L, p) => p < 4]],
+    3: [['Grip without pain', (L) => L('grip') === 0], ['Weight on the hand', (L) => L('weight') === 0], ['No swelling', (L) => L('swelling') === 0], ['Pain 0-1', (L, p) => p < 2]],
+  },
+}
+
+// Goals for one stage, each marked done or not from these answers (null answers = nothing done yet).
+export function stageGoals(partId, stage, answers) {
+  const list = GOALS[partId]?.[stage] ?? []
   const L = (id) => level(partId, answers, id)
-  const pain = answers.pain ?? 0
-  if (partId === 'ankle') {
-    if (L('walk') === 2 || pain >= 7 || L('swelling') === 2) return STAGE.protect
-    if (L('walk') === 1 || L('rom') === 2 || pain >= 4) return STAGE.motion
-    if (L('balance') > 0 || L('rom') > 0 || L('swelling') > 0 || pain >= 2) return STAGE.strength
-    return STAGE.sport
+  return list.map(([label, test]) => ({ label, done: !!answers && test(L, answers.pain ?? 0) }))
+}
+
+function stageFromAnswers(partId, answers) {
+  let s = STAGE.protect
+  for (const n of [1, 2, 3]) {
+    if (!stageGoals(partId, n, answers).every((g) => g.done)) break
+    s = n
   }
-  if (partId === 'shoulder') {
-    if (L('daily') === 2 || L('overhead') === 2 || L('night') === 2 || pain >= 7) return STAGE.protect
-    if (L('overhead') === 1 || L('reach_back') === 2 || pain >= 4) return STAGE.motion
-    if (L('reach_back') > 0 || L('daily') > 0 || L('night') > 0 || pain >= 2) return STAGE.strength
-    return STAGE.sport
-  }
-  if (partId === 'hamstring') {
-    if (L('walk') === 2 || L('bend_knee') === 2 || pain >= 7) return STAGE.protect
-    if (L('walk') === 1 || L('stretch') === 2 || pain >= 4) return STAGE.motion
-    if (L('jog') > 0 || L('stretch') > 0 || L('bend_knee') > 0 || pain >= 2) return STAGE.strength
-    return STAGE.sport
-  }
-  if (partId === 'wrist') {
-    if (L('bend') === 2 || L('swelling') === 2 || pain >= 7) return STAGE.protect
-    if (L('bend') === 1 || L('grip') === 2 || pain >= 4) return STAGE.motion
-    if (L('grip') > 0 || L('weight') > 0 || L('swelling') > 0 || pain >= 2) return STAGE.strength
-    return STAGE.sport
-  }
-  return STAGE.protect
+  return s
 }
 
 // Earliest day each stage can start, so a great day 2 doesn't jump straight to hops.
@@ -60,7 +74,7 @@ function gate(stage, day, estimate, projected) {
   const gates = stageGates(estimate)
   let s = stage
   while (s > 0 && day < gates[s]) s--
-  // Past the projected return day with sport-level answers: time for the trainer to clear them.
+  // Past the projected return day with sport-level answers: time for a doctor to clear them.
   if (stage >= STAGE.sport && projected && day >= projected) return { stage: STAGE.return, held: false }
   return { stage: s, held: s < stage, unlockDay: s < stage ? gates[s + 1] : null }
 }
@@ -117,15 +131,10 @@ export function todayPlan(injury, day) {
   const before = prev ? gate(stageFromAnswers(partId, prev.answers), last.day, outcome.estimate, plan.projected).stage : last ? gate(startingStage(outcome), last.day, outcome.estimate, plan.projected).stage : null
   const changes = last ? biggestChanges(partId, prev?.answers, last.answers) : []
 
-  // Gentler on painful days: smaller range of motion and fewer reps.
+  // Every exercise: 3 rounds of 30 seconds. On painful days the moves are smaller.
   const pain = last?.answers.pain
-  const easy = pain >= 6 ? 0.6 : pain >= 4 ? 0.8 : 1
-  const exercises = PROGRAM[partId][STAGES[stage].id].map((id) => {
-    const ex = exercise(id)
-    const reps = ex.reps ? Math.max(Math.min(ex.reps, 3), Math.round(ex.reps * easy)) : null
-    const seconds = ex.seconds ? Math.round(ex.seconds * (easy < 1 ? 0.7 : 1)) : null
-    return { ...ex, reps, seconds, range: easy < 1 ? Math.max(0.7, easy) : 1, duration: seconds ?? reps * period(ex.motion) }
-  })
+  const easy = pain >= 6 ? 0.65 : pain >= 4 ? 0.8 : 1
+  const exercises = PROGRAM[partId][STAGES[stage].id].map((id) => ({ ...exercise(id), range: easy, duration: WORK_SECONDS }))
 
   return {
     stage,
@@ -139,7 +148,8 @@ export function todayPlan(injury, day) {
     easy: easy < 1,
     checkedToday: checks.some((c) => c.day === day),
     exercises,
-    suggestedSets: stage === STAGE.protect ? 2 : 3,
+    rounds: ROUNDS,
+    lastAnswers: last?.answers ?? null,
     doneToday: plan.sessions?.[day] ?? null,
   }
 }

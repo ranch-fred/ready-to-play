@@ -9,13 +9,13 @@ export const BODY_PARTS = [
   { id: 'other', label: 'Somewhere else' },
 ]
 
-const SEVERITY = { plan: 0, see_trainer: 1, see_care_today: 2, emergency: 3 }
+const SEVERITY = { plan: 0, see_trainer: 1, see_care_today: 2 }
 
 export function worstAction(...actions) {
   return actions.filter(Boolean).reduce((a, b) => (SEVERITY[b] > SEVERITY[a] ? b : a), 'plan')
 }
 
-// Only the head-injury check is asked before the injury questions.
+// Warning-sign questions asked before the injury questions (none right now).
 // Everything else is asked by tailoredQuestions, specific to the injury and the spot that hurts.
 export function redFlagsFor() {
   return [...rules.globalRedFlags].sort((a, b) => SEVERITY[b.action] - SEVERITY[a.action])

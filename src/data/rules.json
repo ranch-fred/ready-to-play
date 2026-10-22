@@ -1,107 +1,106 @@
 {
   "meta": {
     "version": "0.1.0-draft",
-    "status": "DRAFT - must be reviewed by the school's athletic trainer before the demo",
+    "status": "DRAFT",
     "reviewedBy": null,
-    "disclaimer": "ReadyToPlay does not replace a doctor or athletic trainer. Only an athletic trainer or doctor can clear you to play.",
+    "disclaimer": "ReadyToPlay does not replace a doctor. Only a doctor can clear you to play.",
     "estimatePolicy": "Every estimate starts at maxDays (the conservative end) and the full range is shown. Improving check-ins can move it toward minDays but never below it. Getting worse never moves it earlier."
   },
-
   "actions": {
-    "emergency": {
-      "title": "Get emergency help now",
-      "message": "Call 911 or go to the nearest emergency room. Tell your coach or athletic trainer right away."
-    },
     "see_care_today": {
-      "title": "See the athletic trainer or a doctor today",
-      "message": "Stop playing. This needs a real check before any recovery plan. We'll show you where to go."
+      "title": "Get it checked today",
+      "message": "Stop playing. This needs a real check before a recovery plan. We'll show you where to go."
     },
     "see_trainer": {
-      "title": "Check in with your athletic trainer first",
-      "message": "This might need a brace, splint, or exam. Your trainer can start your plan once they've looked at it."
+      "title": "Get it checked first",
+      "message": "This might need a brace, splint, or exam. Your plan starts once a doctor has looked at it."
     },
     "plan": {
       "title": "You can start a recovery plan",
-      "message": "No warning signs found. Follow the plan, do your daily check-in, and still tell your athletic trainer."
+      "message": "No warning signs found. Follow the plan and do your daily check-in."
     }
   },
-
-  "globalRedFlags": [
-    {
-      "id": "head_hit",
-      "question": "Did you hit your head, or do you have a headache, dizziness, confusion, or blurry vision?",
-      "triggerAnswer": true,
-      "action": "see_care_today",
-      "note": "Any possible head injury goes to the trainer under the school's concussion protocol. No plan is ever built.",
-      "sources": ["cdc_headsup"]
-    }
-  ],
-
-  "headInjury": {
-    "action": "see_care_today",
-    "message": "Head injuries always go to your athletic trainer or a doctor. Do not return to play today. ReadyToPlay never builds a plan for a head injury.",
-    "emergencySigns": [
-      "Seizures or shaking",
-      "Not recognizing people or places",
-      "Throwing up more than once",
-      "Acting strange, more confused, restless, or agitated",
-      "Passed out, getting more and more sleepy, or can't stay awake",
-      "Slurred speech, weakness, numbness, or clumsiness",
-      "A headache that gets worse and won't go away",
-      "One pupil bigger than the other, or double vision"
-    ],
-    "emergencyAction": "emergency",
-    "sources": ["cdc_headsup"]
-  },
-
+  "globalRedFlags": [],
   "otherPain": {
     "action": "see_trainer",
     "message": "We only build plans for ankle, shoulder, hamstring, and wrist injuries. For anything else, answer the warning-sign questions and we'll point you to the right care.",
     "useGlobalRedFlags": true
   },
-
   "checkInRules": [
     {
       "id": "new_numbness_or_spike",
       "question": "Since yesterday, any new numbness or tingling, or a sudden jump in pain or swelling?",
       "triggerAnswer": true,
       "action": "see_care_today",
-      "sources": ["medline_hamstring", "medline_wrist"]
+      "sources": [
+        "medline_hamstring",
+        "medline_wrist"
+      ]
     },
     {
       "id": "worse_two_days",
       "rule": "Pain score higher than the day before on 2 check-ins in a row",
       "action": "see_trainer",
-      "sources": ["plan"]
+      "sources": [
+        "plan"
+      ]
     }
   ],
-
   "selfTestScoring": {
     "painScale": "0 = no pain, 10 = worst pain imaginable",
     "rules": [
-      { "if": "pain >= 7 OR any function test failed", "severity": "see_someone" },
-      { "if": "pain 4-6 OR any function test 'with difficulty'", "severity": "moderate" },
-      { "if": "pain <= 3 AND all function tests passed", "severity": "mild" }
+      {
+        "if": "pain >= 7 OR any function test failed",
+        "severity": "see_someone"
+      },
+      {
+        "if": "pain 4-6 OR any function test 'with difficulty'",
+        "severity": "moderate"
+      },
+      {
+        "if": "pain <= 3 AND all function tests passed",
+        "severity": "mild"
+      }
     ],
     "swellingRule": "Swelling 'A lot' counts the same as a function test answered 'With difficulty'."
   },
-
   "phaseTemplate": [
-    { "id": "protect", "name": "Protect & calm it down", "shareOfTimeline": 0.15 },
-    { "id": "motion", "name": "Gentle movement", "shareOfTimeline": 0.25 },
-    { "id": "strength", "name": "Build strength", "shareOfTimeline": 0.3 },
-    { "id": "sport", "name": "Sport drills", "shareOfTimeline": 0.3 },
-    { "id": "return", "name": "Return to play (trainer clears you)", "shareOfTimeline": 0 }
+    {
+      "id": "protect",
+      "name": "Protect & calm it down",
+      "shareOfTimeline": 0.15
+    },
+    {
+      "id": "motion",
+      "name": "Gentle movement",
+      "shareOfTimeline": 0.25
+    },
+    {
+      "id": "strength",
+      "name": "Build strength",
+      "shareOfTimeline": 0.3
+    },
+    {
+      "id": "sport",
+      "name": "Sport drills",
+      "shareOfTimeline": 0.3
+    },
+    {
+      "id": "return",
+      "name": "Return to play (doctor clears you)",
+      "shareOfTimeline": 0
+    }
   ],
-
   "rice": {
     "rest": "Stop the activity that hurt it. Use crutches for a leg injury if walking hurts.",
     "ice": "Cold pack wrapped in a towel for 20 minutes, a few times a day. Never put ice right on skin.",
     "compression": "Elastic wrap, snug but not tight.",
     "elevation": "Keep it raised above your heart when resting.",
-    "sources": ["aaos_soft_tissue", "medline_hamstring"]
+    "sources": [
+      "aaos_soft_tissue",
+      "medline_hamstring"
+    ]
   },
-
   "injuries": {
     "ankle": {
       "name": "Ankle sprain",
@@ -113,7 +112,10 @@
           "label": "Outside of the ankle",
           "hint": "Your foot rolled inward. This is the most common sprain.",
           "effect": "standard",
-          "sources": ["cleveland_ankle", "statpearls_ankle"]
+          "sources": [
+            "cleveland_ankle",
+            "statpearls_ankle"
+          ]
         },
         {
           "id": "high",
@@ -121,19 +123,30 @@
           "hint": "Your foot got twisted outward, often in a collision. Hurts more when you turn your foot out.",
           "effect": "estimate_override",
           "estimates": {
-            "mild": { "minDays": 42, "maxDays": 56, "label": "Possible high ankle sprain" },
-            "moderate": { "minDays": 42, "maxDays": 84, "label": "Possible high ankle sprain" }
+            "mild": {
+              "minDays": 42,
+              "maxDays": 56,
+              "label": "Possible high ankle sprain"
+            },
+            "moderate": {
+              "minDays": 42,
+              "maxDays": 84,
+              "label": "Possible high ankle sprain"
+            }
           },
           "alsoAction": "see_trainer",
-          "note": "High ankle sprains usually take 6-8 weeks or longer, about twice as long as a normal sprain. Get your trainer or a doctor to confirm.",
-          "sources": ["cleveland_high_ankle", "pmc_ankle_athlete"]
+          "note": "High ankle sprains usually take 6-8 weeks or longer, about twice as long as a normal sprain. Get a doctor to confirm.",
+          "sources": [
+            "cleveland_high_ankle",
+            "pmc_ankle_athlete"
+          ]
         },
         {
           "id": "inside",
           "label": "Inside of the ankle",
           "hint": "Your foot rolled outward.",
           "effect": "estimate_override",
-          "note": "Inside-ankle sprains are less common and usually take longer than outside ones. Have your trainer or a doctor confirm it.",
+          "note": "Inside-ankle sprains are less common and usually take longer than outside ones. Have a doctor confirm it.",
           "alsoAction": "see_trainer",
           "estimates": {
             "mild": {
@@ -159,7 +172,9 @@
           "triggerAnswer": false,
           "action": "see_care_today",
           "note": "Not being able to take 4 steps can mean a broken bone, so it needs an X-ray.",
-          "sources": ["aafp_ankle_2012"]
+          "sources": [
+            "aafp_ankle_2012"
+          ]
         },
         {
           "id": "ottawa_bone",
@@ -167,32 +182,105 @@
           "triggerAnswer": true,
           "action": "see_care_today",
           "note": "Pain right on the bone can mean a fracture, so it needs an X-ray.",
-          "sources": ["aafp_ankle_2012"]
+          "sources": [
+            "aafp_ankle_2012"
+          ]
         }
       ],
       "selfTests": [
-        { "id": "pain", "type": "scale", "question": "How bad is the pain right now? (0-10)" },
-        { "id": "walk", "type": "function", "question": "Can you walk normally across the room?", "options": ["Yes", "With difficulty", "No"] },
-        { "id": "rom", "type": "function", "question": "Can you point your toes up and down and draw circles with your foot?", "options": ["Yes", "With difficulty", "No"] },
-        { "id": "swelling", "type": "choice", "question": "How swollen is it?", "options": ["None", "A little", "A lot"] }
+        {
+          "id": "pain",
+          "type": "scale",
+          "question": "How bad is the pain right now? (0-10)"
+        },
+        {
+          "id": "walk",
+          "type": "function",
+          "question": "Can you walk normally across the room?",
+          "options": [
+            "Yes",
+            "With difficulty",
+            "No"
+          ]
+        },
+        {
+          "id": "rom",
+          "type": "function",
+          "question": "Can you point your toes up and down and draw circles with your foot?",
+          "options": [
+            "Yes",
+            "With difficulty",
+            "No"
+          ]
+        },
+        {
+          "id": "swelling",
+          "type": "choice",
+          "question": "How swollen is it?",
+          "options": [
+            "None",
+            "A little",
+            "A lot"
+          ]
+        }
       ],
       "estimates": {
-        "mild": { "minDays": 7, "maxDays": 14, "label": "Mild sprain (like a grade 1)" },
-        "moderate": { "minDays": 21, "maxDays": 42, "label": "Moderate (like a grade 2)" },
-        "see_someone": { "action": "see_care_today", "note": "Possible grade 3 (complete tear): 6-12 weeks and sometimes surgery. Not planned by the app." }
+        "mild": {
+          "minDays": 7,
+          "maxDays": 14,
+          "label": "Mild sprain (like a grade 1)"
+        },
+        "moderate": {
+          "minDays": 21,
+          "maxDays": 42,
+          "label": "Moderate (like a grade 2)"
+        },
+        "see_someone": {
+          "action": "see_care_today",
+          "note": "Possible grade 3 (complete tear): 6-12 weeks and sometimes surgery. Not planned by the app."
+        }
       },
-      "trainerCheckDay": { "minDay": 4, "maxDay": 7, "reason": "Exams are more accurate 4-7 days after the injury." },
+      "trainerCheckDay": {
+        "minDay": 4,
+        "maxDay": 7,
+        "reason": "Exams are more accurate 4-7 days after the injury."
+      },
       "phases": {
-        "protect": ["RICE", "Brace or wrap for about 5-10 days", "Start gentle range-of-motion in the first week"],
-        "motion": ["Ankle alphabet (trace letters with your toes)", "Resistance-band up/down/in/out", "Walk as pain allows"],
-        "strength": ["Single-leg balance 30-60 seconds", "Calf raises", "One-leg mini squats", "Wobble board if available"],
-        "sport": ["Scissor hops", "Squat jumps", "Bounding at half speed", "Sport-specific cutting drills"],
-        "return": ["Trainer clearance", "Wear a lace-up or semi-rigid brace during sports (recommended for up to 12 months)"]
+        "protect": [
+          "RICE",
+          "Brace or wrap for about 5-10 days",
+          "Start gentle range-of-motion in the first week"
+        ],
+        "motion": [
+          "Ankle alphabet (trace letters with your toes)",
+          "Resistance-band up/down/in/out",
+          "Walk as pain allows"
+        ],
+        "strength": [
+          "Single-leg balance 30-60 seconds",
+          "Calf raises",
+          "One-leg mini squats",
+          "Wobble board if available"
+        ],
+        "sport": [
+          "Scissor hops",
+          "Squat jumps",
+          "Bounding at half speed",
+          "Sport-specific cutting drills"
+        ],
+        "return": [
+          "A doctor clears you",
+          "Wear a lace-up or semi-rigid brace during sports (recommended for up to 12 months)"
+        ]
       },
       "noImprovementDays": 7,
-      "sources": ["statpearls_ankle", "aafp_ankle_2012", "aafp_ankle_2025", "cleveland_ankle"]
+      "sources": [
+        "statpearls_ankle",
+        "aafp_ankle_2012",
+        "aafp_ankle_2025",
+        "cleveland_ankle"
+      ]
     },
-
     "shoulder": {
       "name": "Shoulder strain / overuse pain",
       "askSide": true,
@@ -203,14 +291,19 @@
           "label": "Outer side of the shoulder",
           "hint": "Worse when you lift your arm out to the side or overhead.",
           "effect": "standard",
-          "sources": ["aaos_rotator_cuff", "cleveland_shoulder"]
+          "sources": [
+            "aaos_rotator_cuff",
+            "cleveland_shoulder"
+          ]
         },
         {
           "id": "front",
           "label": "Front of the shoulder",
           "hint": "Can spread down the front of your arm.",
           "effect": "standard",
-          "sources": ["cleveland_shoulder"]
+          "sources": [
+            "cleveland_shoulder"
+          ]
         },
         {
           "id": "top",
@@ -227,7 +320,7 @@
             },
             "moderate": {
               "action": "see_trainer",
-              "note": "Moderate separations can take 6-8 weeks or more. Your trainer or a doctor sets the timeline."
+              "note": "Moderate separations can take 6-8 weeks or more. A doctor sets the timeline."
             }
           },
           "sources": [
@@ -243,21 +336,29 @@
           "triggerAnswer": true,
           "action": "see_care_today",
           "note": "Sudden snap plus immediate weakness can mean a rotator cuff tear.",
-          "sources": ["hopkins_rotator_cuff", "aaos_rotator_cuff"]
+          "sources": [
+            "hopkins_rotator_cuff",
+            "aaos_rotator_cuff"
+          ]
         },
         {
           "id": "cant_lift",
           "question": "Can you raise your arm out to the side and over your head?",
           "triggerAnswer": false,
           "action": "see_care_today",
-          "sources": ["aaos_rotator_cuff"]
+          "sources": [
+            "aaos_rotator_cuff"
+          ]
         },
         {
           "id": "night_pain",
           "question": "Does it hurt at night or wake you up?",
           "triggerAnswer": true,
           "action": "see_trainer",
-          "sources": ["aaos_rotator_cuff", "cleveland_shoulder"]
+          "sources": [
+            "aaos_rotator_cuff",
+            "cleveland_shoulder"
+          ]
         },
         {
           "id": "fever_red",
@@ -265,31 +366,92 @@
           "triggerAnswer": true,
           "action": "see_care_today",
           "note": "Possible infection.",
-          "sources": ["cleveland_shoulder"]
+          "sources": [
+            "cleveland_shoulder"
+          ]
         }
       ],
       "selfTests": [
-        { "id": "pain", "type": "scale", "question": "How bad is the pain right now? (0-10)" },
-        { "id": "overhead", "type": "function", "question": "Can you lift your arm straight overhead?", "options": ["Yes", "With difficulty", "No"] },
-        { "id": "reach_back", "type": "function", "question": "Can you reach behind your back like tucking in a shirt?", "options": ["Yes", "With difficulty", "No"] },
-        { "id": "daily", "type": "function", "question": "Can you do everyday things (backpack, brushing hair) without pain?", "options": ["Yes", "With difficulty", "No"] }
+        {
+          "id": "pain",
+          "type": "scale",
+          "question": "How bad is the pain right now? (0-10)"
+        },
+        {
+          "id": "overhead",
+          "type": "function",
+          "question": "Can you lift your arm straight overhead?",
+          "options": [
+            "Yes",
+            "With difficulty",
+            "No"
+          ]
+        },
+        {
+          "id": "reach_back",
+          "type": "function",
+          "question": "Can you reach behind your back like tucking in a shirt?",
+          "options": [
+            "Yes",
+            "With difficulty",
+            "No"
+          ]
+        },
+        {
+          "id": "daily",
+          "type": "function",
+          "question": "Can you do everyday things (backpack, brushing hair) without pain?",
+          "options": [
+            "Yes",
+            "With difficulty",
+            "No"
+          ]
+        }
       ],
       "estimates": {
-        "mild": { "minDays": 14, "maxDays": 28, "label": "Mild tendinitis / strain" },
-        "moderate": { "action": "see_trainer", "note": "More serious cases can take several months. Trainer or doctor sets the timeline." },
-        "see_someone": { "action": "see_care_today" }
+        "mild": {
+          "minDays": 14,
+          "maxDays": 28,
+          "label": "Mild tendinitis / strain"
+        },
+        "moderate": {
+          "action": "see_trainer",
+          "note": "More serious cases can take several months. A doctor sets the timeline."
+        },
+        "see_someone": {
+          "action": "see_care_today"
+        }
       },
       "phases": {
-        "protect": ["Rest from throwing and overhead motions", "Ice 20 minutes a few times a day", "No overhead lifting"],
-        "motion": ["Pendulum swings", "Gentle range-of-motion as pain allows"],
-        "strength": ["Resistance-band rotator cuff exercises (trainer to confirm)", "Shoulder blade squeezes"],
-        "sport": ["Warm up with flexibility work first", "Gradual return to throwing / overhead sport motions"],
-        "return": ["No pain or symptoms", "Trainer clearance"]
+        "protect": [
+          "Rest from throwing and overhead motions",
+          "Ice 20 minutes a few times a day",
+          "No overhead lifting"
+        ],
+        "motion": [
+          "Pendulum swings",
+          "Gentle range-of-motion as pain allows"
+        ],
+        "strength": [
+          "Resistance-band rotator cuff exercises",
+          "Shoulder blade squeezes"
+        ],
+        "sport": [
+          "Warm up with flexibility work first",
+          "Gradual return to throwing / overhead sport motions"
+        ],
+        "return": [
+          "No pain or symptoms",
+          "A doctor clears you"
+        ]
       },
       "noImprovementDays": 14,
-      "sources": ["cleveland_shoulder", "hopkins_rotator_cuff", "aaos_rotator_cuff"]
+      "sources": [
+        "cleveland_shoulder",
+        "hopkins_rotator_cuff",
+        "aaos_rotator_cuff"
+      ]
     },
-
     "hamstring": {
       "name": "Hamstring strain",
       "askSide": true,
@@ -300,7 +462,10 @@
           "label": "Middle of the back of the thigh",
           "hint": "The most common spot for a pulled hamstring.",
           "effect": "standard",
-          "sources": ["medline_hamstring", "cleveland_hamstring"]
+          "sources": [
+            "medline_hamstring",
+            "cleveland_hamstring"
+          ]
         },
         {
           "id": "upper",
@@ -309,7 +474,10 @@
           "effect": "action",
           "action": "see_care_today",
           "note": "Pain this high can mean the tendon is injured or pulled off the bone. Tendon injuries can take months and sometimes need surgery.",
-          "sources": ["medline_hamstring", "pmc_hamstring_tendon"]
+          "sources": [
+            "medline_hamstring",
+            "pmc_hamstring_tendon"
+          ]
         },
         {
           "id": "lower",
@@ -318,7 +486,9 @@
           "effect": "action",
           "action": "see_care_today",
           "note": "Pain close to the knee can mean the tendon pulled off the bone. A doctor should check it.",
-          "sources": ["medline_hamstring"]
+          "sources": [
+            "medline_hamstring"
+          ]
         }
       ],
       "redFlags": [
@@ -328,39 +498,110 @@
           "triggerAnswer": true,
           "action": "see_care_today",
           "note": "Heavy bruising can mean the tendon pulled off the bone.",
-          "sources": ["medline_hamstring", "cleveland_hamstring"]
+          "sources": [
+            "medline_hamstring",
+            "cleveland_hamstring"
+          ]
         },
         {
           "id": "cant_walk",
           "question": "Can you walk without a big limp?",
           "triggerAnswer": false,
           "action": "see_care_today",
-          "sources": ["cleveland_hamstring"]
+          "sources": [
+            "cleveland_hamstring"
+          ]
         }
       ],
       "selfTests": [
-        { "id": "pain", "type": "scale", "question": "How bad is the pain right now? (0-10)" },
-        { "id": "walk", "type": "function", "question": "Can you walk normally?", "options": ["Yes", "With difficulty", "No"] },
-        { "id": "bend_knee", "type": "function", "question": "Lying on your stomach, can you bend your knee against light resistance?", "options": ["Yes", "With difficulty", "No"] },
-        { "id": "stretch", "type": "function", "question": "Can you gently straighten your leg and lean forward a little?", "options": ["Yes", "With difficulty", "No"] }
+        {
+          "id": "pain",
+          "type": "scale",
+          "question": "How bad is the pain right now? (0-10)"
+        },
+        {
+          "id": "walk",
+          "type": "function",
+          "question": "Can you walk normally?",
+          "options": [
+            "Yes",
+            "With difficulty",
+            "No"
+          ]
+        },
+        {
+          "id": "bend_knee",
+          "type": "function",
+          "question": "Lying on your stomach, can you bend your knee against light resistance?",
+          "options": [
+            "Yes",
+            "With difficulty",
+            "No"
+          ]
+        },
+        {
+          "id": "stretch",
+          "type": "function",
+          "question": "Can you gently straighten your leg and lean forward a little?",
+          "options": [
+            "Yes",
+            "With difficulty",
+            "No"
+          ]
+        }
       ],
       "estimates": {
-        "mild": { "minDays": 7, "maxDays": 21, "label": "Mild strain (like a grade 1)" },
-        "moderate": { "minDays": 21, "maxDays": 42, "label": "Moderate (like a grade 2)" },
-        "see_someone": { "action": "see_care_today", "note": "Possible grade 3 (complete tear): several months and sometimes surgery." }
+        "mild": {
+          "minDays": 7,
+          "maxDays": 21,
+          "label": "Mild strain (like a grade 1)"
+        },
+        "moderate": {
+          "minDays": 21,
+          "maxDays": 42,
+          "label": "Moderate (like a grade 2)"
+        },
+        "see_someone": {
+          "action": "see_care_today",
+          "note": "Possible grade 3 (complete tear): several months and sometimes surgery."
+        }
       },
-      "trainerCheckDay": { "minDay": 7, "maxDay": 14, "reason": "MedlinePlus advises a follow-up 1-2 weeks after the injury." },
+      "trainerCheckDay": {
+        "minDay": 7,
+        "maxDay": 14,
+        "reason": "MedlinePlus advises a follow-up 1-2 weeks after the injury."
+      },
       "phases": {
-        "protect": ["RICE", "Crutches if walking hurts", "No stretching yet"],
-        "motion": ["Light stretching once pain allows", "Easy walking"],
-        "strength": ["Gradual hamstring strengthening (trainer to confirm exercises)"],
-        "sport": ["Jogging, then build to sprinting", "Sport drills"],
-        "return": ["Same strength and flexibility as the other leg", "No pain when sprinting", "Trainer clearance"]
+        "protect": [
+          "RICE",
+          "Crutches if walking hurts",
+          "No stretching yet"
+        ],
+        "motion": [
+          "Light stretching once pain allows",
+          "Easy walking"
+        ],
+        "strength": [
+          "Gradual hamstring strengthening"
+        ],
+        "sport": [
+          "Jogging, then build to sprinting",
+          "Sport drills"
+        ],
+        "return": [
+          "Same strength and flexibility as the other leg",
+          "No pain when sprinting",
+          "A doctor clears you"
+        ]
       },
       "noImprovementDays": 14,
-      "sources": ["medline_hamstring", "cleveland_hamstring", "pmc_hamstring_college", "pmc_hamstring_mlb"]
+      "sources": [
+        "medline_hamstring",
+        "cleveland_hamstring",
+        "pmc_hamstring_college",
+        "pmc_hamstring_mlb"
+      ]
     },
-
     "wrist": {
       "name": "Wrist sprain",
       "askSide": true,
@@ -372,21 +613,27 @@
           "hint": "Often after falling on an outstretched hand.",
           "effect": "standard",
           "note": "We'll do an extra check for a hidden broken bone (scaphoid), which is common on this side.",
-          "sources": ["aafp_scaphoid", "aaos_scaphoid"]
+          "sources": [
+            "aafp_scaphoid",
+            "aaos_scaphoid"
+          ]
         },
         {
           "id": "back",
           "label": "Back or middle of the wrist",
           "hint": "The top of your wrist, above the back of your hand.",
           "effect": "standard",
-          "sources": ["clevelandclinic_wrist", "aaos_wrist"]
+          "sources": [
+            "clevelandclinic_wrist",
+            "aaos_wrist"
+          ]
         },
         {
           "id": "pinky",
           "label": "Pinky side",
           "hint": "Might click or pop when you turn your wrist.",
           "effect": "estimate_override",
-          "note": "Pinky-side pain can be a cartilage injury (TFCC) that heals slower than a normal sprain. Have your trainer or a doctor confirm it.",
+          "note": "Pinky-side pain can be a cartilage injury (TFCC) that heals slower than a normal sprain. Have a doctor confirm it.",
           "alsoAction": "see_trainer",
           "estimates": {
             "mild": {
@@ -412,74 +659,246 @@
           "triggerAnswer": true,
           "action": "see_care_today",
           "note": "Tenderness here can mean a scaphoid fracture, which is often missed and mistaken for a sprain.",
-          "sources": ["aafp_scaphoid", "aaos_scaphoid"]
+          "sources": [
+            "aafp_scaphoid",
+            "aaos_scaphoid"
+          ]
         },
         {
           "id": "fingers",
           "question": "Can you move all your fingers and make a fist?",
           "triggerAnswer": false,
           "action": "see_care_today",
-          "sources": ["clevelandclinic_wrist"]
+          "sources": [
+            "clevelandclinic_wrist"
+          ]
         },
         {
           "id": "unstable_locking",
           "question": "Does the wrist feel loose, unstable, or like it locks or catches?",
           "triggerAnswer": true,
           "action": "see_care_today",
-          "sources": ["medline_wrist", "clevelandclinic_wrist"]
+          "sources": [
+            "medline_wrist",
+            "clevelandclinic_wrist"
+          ]
         }
       ],
       "selfTests": [
-        { "id": "pain", "type": "scale", "question": "How bad is the pain right now? (0-10)" },
-        { "id": "bend", "type": "function", "question": "Can you bend your wrist up and down?", "options": ["Yes", "With difficulty", "No"] },
-        { "id": "grip", "type": "function", "question": "Can you grip a water bottle and twist the cap?", "options": ["Yes", "With difficulty", "No"] },
-        { "id": "swelling", "type": "choice", "question": "How swollen is it?", "options": ["None", "A little", "A lot"] }
+        {
+          "id": "pain",
+          "type": "scale",
+          "question": "How bad is the pain right now? (0-10)"
+        },
+        {
+          "id": "bend",
+          "type": "function",
+          "question": "Can you bend your wrist up and down?",
+          "options": [
+            "Yes",
+            "With difficulty",
+            "No"
+          ]
+        },
+        {
+          "id": "grip",
+          "type": "function",
+          "question": "Can you grip a water bottle and twist the cap?",
+          "options": [
+            "Yes",
+            "With difficulty",
+            "No"
+          ]
+        },
+        {
+          "id": "swelling",
+          "type": "choice",
+          "question": "How swollen is it?",
+          "options": [
+            "None",
+            "A little",
+            "A lot"
+          ]
+        }
       ],
       "estimates": {
-        "mild": { "minDays": 14, "maxDays": 21, "label": "Mild sprain" },
-        "moderate": { "action": "see_trainer", "note": "Moderate sprains often need a splint. Trainer or doctor sets the plan." },
-        "see_someone": { "action": "see_care_today" }
+        "mild": {
+          "minDays": 14,
+          "maxDays": 21,
+          "label": "Mild sprain"
+        },
+        "moderate": {
+          "action": "see_trainer",
+          "note": "Moderate sprains often need a splint. A doctor sets the plan."
+        },
+        "see_someone": {
+          "action": "see_care_today"
+        }
       },
       "noImprovementHours": 48,
       "noImprovementNote": "Pain or swelling that lasts more than 48 hours should be checked, because wrist fractures can hide on early X-rays.",
       "phases": {
-        "protect": ["RICE", "Wrap or brace"],
-        "motion": ["Gentle wrist bends and circles"],
-        "strength": ["Grip squeezes", "Light wrist curls (trainer to confirm)"],
-        "sport": ["Catching, passing, and weight-bearing drills (push-up position) only when pain-free"],
-        "return": ["Full pain-free motion and grip", "Trainer clearance"]
+        "protect": [
+          "RICE",
+          "Wrap or brace"
+        ],
+        "motion": [
+          "Gentle wrist bends and circles"
+        ],
+        "strength": [
+          "Grip squeezes",
+          "Light wrist curls"
+        ],
+        "sport": [
+          "Catching, passing, and weight-bearing drills (push-up position) only when pain-free"
+        ],
+        "return": [
+          "Full pain-free motion and grip",
+          "A doctor clears you"
+        ]
       },
-      "sources": ["clevelandclinic_wrist", "aaos_wrist", "medline_wrist", "aafp_scaphoid"]
+      "sources": [
+        "clevelandclinic_wrist",
+        "aaos_wrist",
+        "medline_wrist",
+        "aafp_scaphoid"
+      ]
     }
   },
-
   "sources": {
-    "plan": { "title": "ReadyToPlay safety plan (common-sense rule, trainer to confirm)", "url": null },
-    "aafp_ankle_2012": { "title": "Update on Acute Ankle Sprains", "publisher": "American Family Physician (AAFP), 2012", "url": "https://www.aafp.org/pubs/afp/issues/2012/0615/p1170.html" },
-    "aafp_ankle_2025": { "title": "Management of Acute Ankle Sprains: Common Questions and Answers", "publisher": "American Family Physician (AAFP), 2025", "url": "https://www.aafp.org/pubs/afp/issues/2025/1200/acute-ankle-sprains.html" },
-    "aafp_ankle_2006": { "title": "Acute Ankle Sprain: An Update", "publisher": "American Family Physician (AAFP), 2006", "url": "https://www.aafp.org/pubs/afp/issues/2006/1115/p1714.html" },
-    "statpearls_ankle": { "title": "Acute Ankle Sprain", "publisher": "StatPearls, NIH NCBI Bookshelf", "url": "https://www.ncbi.nlm.nih.gov/books/NBK459212/" },
-    "cleveland_ankle": { "title": "Sprained Ankle", "publisher": "Cleveland Clinic", "url": "https://my.clevelandclinic.org/health/diseases/22048-sprained-ankle" },
-    "cleveland_shoulder": { "title": "Shoulder Tendonitis", "publisher": "Cleveland Clinic", "url": "https://my.clevelandclinic.org/health/diseases/shoulder-tendonitis" },
-    "hopkins_rotator_cuff": { "title": "Rotator Cuff Tendinitis", "publisher": "Johns Hopkins Medicine", "url": "https://www.hopkinsmedicine.org/health/conditions-and-diseases/rotator-cuff-tendinitis" },
-    "aaos_rotator_cuff": { "title": "Rotator Cuff Tears", "publisher": "AAOS OrthoInfo", "url": "https://orthoinfo.aaos.org/en/diseases--conditions/rotator-cuff-tears/" },
-    "medline_hamstring": { "title": "Hamstring strain - aftercare", "publisher": "MedlinePlus, U.S. National Library of Medicine", "url": "https://medlineplus.gov/ency/patientinstructions/000551.htm" },
-    "cleveland_hamstring": { "title": "Hamstring Injury", "publisher": "Cleveland Clinic", "url": "https://my.clevelandclinic.org/health/diseases/17039-hamstring-injury" },
-    "pmc_hamstring_college": { "title": "Outcome of Grade I and II Hamstring Injuries in Intercollegiate Athletes", "publisher": "Sports Health (PMC)", "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC3445226/" },
-    "pmc_hamstring_mlb": { "title": "Hamstring Injury Trends in Major and Minor League Baseball", "publisher": "Orthopaedic Journal of Sports Medicine (PMC)", "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC6685122/" },
-    "clevelandclinic_wrist": { "title": "Wrist Sprains", "publisher": "Cleveland Clinic", "url": "https://my.clevelandclinic.org/health/diseases/24558-sprained-wrist" },
-    "aaos_wrist": { "title": "Wrist Sprains", "publisher": "AAOS OrthoInfo", "url": "https://orthoinfo.aaos.org/en/diseases--conditions/wrist-sprains/" },
-    "medline_wrist": { "title": "Wrist sprain - aftercare", "publisher": "MedlinePlus, U.S. National Library of Medicine", "url": "https://medlineplus.gov/ency/patientinstructions/000568.htm" },
-    "aafp_scaphoid": { "title": "Diagnosis and Management of Scaphoid Fractures", "publisher": "American Family Physician (AAFP), 2004", "url": "https://www.aafp.org/pubs/afp/issues/2004/0901/p879.html" },
-    "aaos_scaphoid": { "title": "Scaphoid Fracture of the Wrist", "publisher": "AAOS OrthoInfo", "url": "https://orthoinfo.aaos.org/en/diseases--conditions/scaphoid-fracture-of-the-wrist/" },
-    "aaos_soft_tissue": { "title": "Sprains, Strains and Other Soft-Tissue Injuries", "publisher": "AAOS OrthoInfo", "url": "https://www.orthoinfo.org/en/diseases--conditions/sprains-strains-and-other-soft-tissue-injuries/" },
-    "cleveland_high_ankle": { "title": "High Ankle Sprain", "publisher": "Cleveland Clinic", "url": "https://my.clevelandclinic.org/health/diseases/22249-high-ankle-sprains" },
-    "pmc_ankle_athlete": { "title": "Assessment of the Injured Ankle in the Athlete", "publisher": "Journal of Athletic Training (PMC)", "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC164372/" },
-    "cleveland_separated": { "title": "Separated Shoulder", "publisher": "Cleveland Clinic", "url": "https://my.clevelandclinic.org/health/diseases/17909-separated-shoulder" },
-    "hopkins_ac": { "title": "AC Joint Problems", "publisher": "Johns Hopkins Medicine", "url": "https://www.hopkinsmedicine.org/health/conditions-and-diseases/ac-joint-problems" },
-    "pmc_hamstring_tendon": { "title": "Diagnosis and prognosis of acute hamstring injuries in athletes", "publisher": "Knee Surgery, Sports Traumatology, Arthroscopy (PMC)", "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC3549245/" },
-    "cleveland_tfcc": { "title": "TFCC Tear", "publisher": "Cleveland Clinic", "url": "https://my.clevelandclinic.org/health/diseases/21832-triangular-fibrocartilage-complex-tear-tfcc" },
-    "pmc_wrist_sports": { "title": "Sports injuries of the wrist", "publisher": "PMC (NIH)", "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC3702762/" },
-    "cdc_headsup": { "title": "HEADS UP: Signs and Symptoms of Concussion", "publisher": "CDC", "url": "https://www.cdc.gov/heads-up/signs-symptoms/index.html" }
+    "plan": {
+      "title": "ReadyToPlay safety plan (common-sense rule)",
+      "url": null
+    },
+    "aafp_ankle_2012": {
+      "title": "Update on Acute Ankle Sprains",
+      "publisher": "American Family Physician (AAFP), 2012",
+      "url": "https://www.aafp.org/pubs/afp/issues/2012/0615/p1170.html"
+    },
+    "aafp_ankle_2025": {
+      "title": "Management of Acute Ankle Sprains: Common Questions and Answers",
+      "publisher": "American Family Physician (AAFP), 2025",
+      "url": "https://www.aafp.org/pubs/afp/issues/2025/1200/acute-ankle-sprains.html"
+    },
+    "aafp_ankle_2006": {
+      "title": "Acute Ankle Sprain: An Update",
+      "publisher": "American Family Physician (AAFP), 2006",
+      "url": "https://www.aafp.org/pubs/afp/issues/2006/1115/p1714.html"
+    },
+    "statpearls_ankle": {
+      "title": "Acute Ankle Sprain",
+      "publisher": "StatPearls, NIH NCBI Bookshelf",
+      "url": "https://www.ncbi.nlm.nih.gov/books/NBK459212/"
+    },
+    "cleveland_ankle": {
+      "title": "Sprained Ankle",
+      "publisher": "Cleveland Clinic",
+      "url": "https://my.clevelandclinic.org/health/diseases/22048-sprained-ankle"
+    },
+    "cleveland_shoulder": {
+      "title": "Shoulder Tendonitis",
+      "publisher": "Cleveland Clinic",
+      "url": "https://my.clevelandclinic.org/health/diseases/shoulder-tendonitis"
+    },
+    "hopkins_rotator_cuff": {
+      "title": "Rotator Cuff Tendinitis",
+      "publisher": "Johns Hopkins Medicine",
+      "url": "https://www.hopkinsmedicine.org/health/conditions-and-diseases/rotator-cuff-tendinitis"
+    },
+    "aaos_rotator_cuff": {
+      "title": "Rotator Cuff Tears",
+      "publisher": "AAOS OrthoInfo",
+      "url": "https://orthoinfo.aaos.org/en/diseases--conditions/rotator-cuff-tears/"
+    },
+    "medline_hamstring": {
+      "title": "Hamstring strain - aftercare",
+      "publisher": "MedlinePlus, U.S. National Library of Medicine",
+      "url": "https://medlineplus.gov/ency/patientinstructions/000551.htm"
+    },
+    "cleveland_hamstring": {
+      "title": "Hamstring Injury",
+      "publisher": "Cleveland Clinic",
+      "url": "https://my.clevelandclinic.org/health/diseases/17039-hamstring-injury"
+    },
+    "pmc_hamstring_college": {
+      "title": "Outcome of Grade I and II Hamstring Injuries in Intercollegiate Athletes",
+      "publisher": "Sports Health (PMC)",
+      "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC3445226/"
+    },
+    "pmc_hamstring_mlb": {
+      "title": "Hamstring Injury Trends in Major and Minor League Baseball",
+      "publisher": "Orthopaedic Journal of Sports Medicine (PMC)",
+      "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC6685122/"
+    },
+    "clevelandclinic_wrist": {
+      "title": "Wrist Sprains",
+      "publisher": "Cleveland Clinic",
+      "url": "https://my.clevelandclinic.org/health/diseases/24558-sprained-wrist"
+    },
+    "aaos_wrist": {
+      "title": "Wrist Sprains",
+      "publisher": "AAOS OrthoInfo",
+      "url": "https://orthoinfo.aaos.org/en/diseases--conditions/wrist-sprains/"
+    },
+    "medline_wrist": {
+      "title": "Wrist sprain - aftercare",
+      "publisher": "MedlinePlus, U.S. National Library of Medicine",
+      "url": "https://medlineplus.gov/ency/patientinstructions/000568.htm"
+    },
+    "aafp_scaphoid": {
+      "title": "Diagnosis and Management of Scaphoid Fractures",
+      "publisher": "American Family Physician (AAFP), 2004",
+      "url": "https://www.aafp.org/pubs/afp/issues/2004/0901/p879.html"
+    },
+    "aaos_scaphoid": {
+      "title": "Scaphoid Fracture of the Wrist",
+      "publisher": "AAOS OrthoInfo",
+      "url": "https://orthoinfo.aaos.org/en/diseases--conditions/scaphoid-fracture-of-the-wrist/"
+    },
+    "aaos_soft_tissue": {
+      "title": "Sprains, Strains and Other Soft-Tissue Injuries",
+      "publisher": "AAOS OrthoInfo",
+      "url": "https://www.orthoinfo.org/en/diseases--conditions/sprains-strains-and-other-soft-tissue-injuries/"
+    },
+    "cleveland_high_ankle": {
+      "title": "High Ankle Sprain",
+      "publisher": "Cleveland Clinic",
+      "url": "https://my.clevelandclinic.org/health/diseases/22249-high-ankle-sprains"
+    },
+    "pmc_ankle_athlete": {
+      "title": "Assessment of the Injured Ankle in the Athlete",
+      "publisher": "Journal of Athletic Training (PMC)",
+      "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC164372/"
+    },
+    "cleveland_separated": {
+      "title": "Separated Shoulder",
+      "publisher": "Cleveland Clinic",
+      "url": "https://my.clevelandclinic.org/health/diseases/17909-separated-shoulder"
+    },
+    "hopkins_ac": {
+      "title": "AC Joint Problems",
+      "publisher": "Johns Hopkins Medicine",
+      "url": "https://www.hopkinsmedicine.org/health/conditions-and-diseases/ac-joint-problems"
+    },
+    "pmc_hamstring_tendon": {
+      "title": "Diagnosis and prognosis of acute hamstring injuries in athletes",
+      "publisher": "Knee Surgery, Sports Traumatology, Arthroscopy (PMC)",
+      "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC3549245/"
+    },
+    "cleveland_tfcc": {
+      "title": "TFCC Tear",
+      "publisher": "Cleveland Clinic",
+      "url": "https://my.clevelandclinic.org/health/diseases/21832-triangular-fibrocartilage-complex-tear-tfcc"
+    },
+    "pmc_wrist_sports": {
+      "title": "Sports injuries of the wrist",
+      "publisher": "PMC (NIH)",
+      "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC3702762/"
+    },
+    "cdc_headsup": {
+      "title": "HEADS UP: Signs and Symptoms of Concussion",
+      "publisher": "CDC",
+      "url": "https://www.cdc.gov/heads-up/signs-symptoms/index.html"
+    }
   }
 }

@@ -6,7 +6,7 @@ import { circle, letters, swing } from '../logic/motion'
 //   (degrees about x, y, z) so lying-down and leaning exercises look the way you actually do them.
 // - `trail`: which point leaves a glowing trail. `anchor`: a point that stays planted (ball of the foot in a
 //   calf raise). `band`: where a resistance band is tied.
-// Exercises are standard sports-medicine rehab moves; a trainer can swap them.
+// Exercises are standard sports-medicine rehab moves; easy to swap.
 
 const SUPINE = [-90, 0, 0] // lying on your back
 const PRONE = [90, 0, 0] // lying on your stomach
@@ -26,6 +26,24 @@ export const EXERCISES = {
     view: ANKLE_SIDE,
     trail: 'toe',
     motion: swing({ from: { ankle: { flex: 16 } }, to: { ankle: { flex: -30 } }, out: 1.1, back: 1.1, cueOut: 'Point your toes away', cueBack: 'Pull your toes back toward you' }),
+  },
+  toe_wiggles: {
+    name: 'Toe curls',
+    setup: 'Sit with your leg up. Curl your toes, then spread them.',
+    why: 'Keeps the foot muscles working without moving the ankle much.',
+    reps: 15,
+    view: ANKLE_SIDE,
+    trail: 'toe',
+    motion: swing({ from: { toes: { flex: 28 } }, to: { toes: { flex: -30 } }, out: 0.9, back: 0.9, cueOut: 'Curl your toes down', cueBack: 'Lift and spread your toes' }),
+  },
+  ankle_in_out: {
+    name: 'Toes in and out',
+    setup: 'Sit with your leg out. Turn your foot side to side, gently.',
+    why: 'Gentle side-to-side motion while it heals.',
+    reps: 12,
+    view: ANKLE_FRONT,
+    trail: 'toe',
+    motion: swing({ from: { ankle: { twist: -14 } }, to: { ankle: { twist: 14 } }, out: 1.2, back: 1.2, cueOut: 'Turn your toes in', cueBack: 'Turn your toes out' }),
   },
   ankle_circles: {
     name: 'Ankle circles',
@@ -174,6 +192,26 @@ export const EXERCISES = {
     trail: 'fingertip',
     motion: swing({ from: { wrist: { flex: -20 } }, to: { wrist: { flex: 22 } }, out: 1.4, back: 1.4, cueOut: 'Let your hand drop down a little', cueBack: 'Lift your hand up a little' }),
   },
+  wrist_side_gentle: {
+    name: 'Gentle side to side',
+    setup: 'Forearm and hand flat on the table.',
+    why: 'Small slides keep the wrist moving.',
+    reps: 10,
+    orient: PALM_DOWN,
+    view: [0.15, 1, -0.3],
+    trail: 'fingertip',
+    motion: swing({ from: { wrist: { side: -12 } }, to: { wrist: { side: 10 } }, out: 1.3, back: 1.3, cueOut: 'Slide toward your thumb', cueBack: 'Slide toward your pinky' }),
+  },
+  palm_flips_gentle: {
+    name: 'Easy palm turns',
+    setup: 'Elbow at your side, forearm on a table.',
+    why: 'Gentle twisting so it doesn\'t get stiff.',
+    reps: 10,
+    orient: PALM_DOWN,
+    view: [1, 0.55, -0.45],
+    trail: 'fingertip',
+    motion: swing({ from: { forearm: { twist: 0 } }, to: { forearm: { twist: 50 } }, out: 1.5, back: 1.5, cueOut: 'Turn your palm up a little', cueBack: 'Turn it back down' }),
+  },
   wrist_bends: {
     name: 'Wrist up and down',
     setup: 'Forearm on a table, hand off the edge, palm down.',
@@ -288,6 +326,25 @@ export const EXERCISES = {
     trail: 'hand',
     motion: circle({ joint: 'shoulder', a: 'flex', b: 'side', ampA: 14, ampB: 14, center: { flex: 55 }, seconds: 3, cue: 'Sway your body so the arm draws small circles' }),
   },
+  pendulum_sway: {
+    name: 'Pendulum sways',
+    setup: 'Lean on a table. Let the hurt arm hang and swing side to side.',
+    why: 'Relaxed swinging loosens the joint.',
+    reps: 12,
+    orient: [55, 0, 0],
+    view: [-0.75, 0.25, 0.75],
+    trail: 'hand',
+    motion: swing({ from: { shoulder: { flex: 55, side: -12 } }, to: { shoulder: { flex: 55, side: 14 } }, out: 1.2, back: 1.2, cueOut: 'Swing out to the side', cueBack: 'Swing back across' }),
+  },
+  elbow_bends: {
+    name: 'Elbow bends',
+    setup: 'Stand with your arm relaxed at your side.',
+    why: 'Keeps the arm moving while the shoulder rests.',
+    reps: 12,
+    view: [-1, 0.18, 0.15],
+    trail: 'hand',
+    motion: swing({ from: { elbow: { flex: 5 } }, to: { elbow: { flex: 125 } }, out: 1.3, back: 1.3, cueOut: 'Bend your elbow up', cueBack: 'Lower it down' }),
+  },
   table_slides: {
     name: 'Table slides',
     setup: 'Sit at a table, hand on a towel. Slide it forward.',
@@ -313,7 +370,7 @@ export const EXERCISES = {
     reps: 3,
     view: [-0.3, 0.6, 1],
     trail: 'hand',
-    motion: swing({ from: { shoulder: {}, elbow: {} }, to: { shoulder: { flex: 88, side: -42 }, elbow: { flex: 15 } }, out: 2, hold: 15, back: 1.6, cueOut: 'Bring your arm across your chest', holdCue: 'Hold the stretch', cueBack: 'Let it come back' }),
+    motion: swing({ from: { shoulder: {}, elbow: {} }, to: { shoulder: { flex: 88, side: -42 }, elbow: { flex: 15 } }, out: 2, hold: 8, back: 1.6, cueOut: 'Bring your arm across your chest', holdCue: 'Hold the stretch', cueBack: 'Let it come back' }),
   },
   wall_slides: {
     name: 'Wall slides',
@@ -413,6 +470,17 @@ export const EXERCISES = {
     trail: 'heel',
     motion: swing({ from: { hip: { flex: 16 }, knee: { flex: 34 } }, to: { hip: { flex: 14 }, knee: { flex: 30 } }, out: 0.6, hold: 5, back: 0.8, rest: 1.5, cueOut: 'Push your heel down', holdCue: 'Hold the squeeze, about half effort', cueBack: 'Relax' }),
   },
+  gentle_knee_bends: {
+    name: 'Small knee bends',
+    setup: 'Lie on your stomach. Bend your knee just a little.',
+    why: 'Easy motion for the muscle without stretching it.',
+    reps: 10,
+    orient: PRONE,
+    floor: true,
+    view: [-1, 0.45, 0.1],
+    trail: 'heel',
+    motion: swing({ from: { knee: {} }, to: { knee: { flex: 45 } }, out: 1.6, back: 1.8, cueOut: 'Lift your heel a little', cueBack: 'Lower it slowly' }),
+  },
   prone_knee_bends: {
     name: 'Lying knee bends',
     setup: 'Lie on your stomach. Bend your knee to bring your heel up.',
@@ -433,7 +501,7 @@ export const EXERCISES = {
     floor: true,
     view: [-1, 0.5, 0.1],
     trail: 'heel',
-    motion: swing({ from: { hip: {}, knee: {} }, to: { hip: { flex: 58 }, knee: { flex: 5 } }, out: 2.5, hold: 20, back: 2, cueOut: 'Lift your leg until you feel a mild stretch', holdCue: 'Hold. Mild stretch, no pain', cueBack: 'Lower it slowly' }),
+    motion: swing({ from: { hip: {}, knee: {} }, to: { hip: { flex: 58 }, knee: { flex: 5 } }, out: 2.5, hold: 10, back: 2, cueOut: 'Lift your leg until you feel a mild stretch', holdCue: 'Hold. Mild stretch, no pain', cueBack: 'Lower it slowly' }),
   },
   standing_curls: {
     name: 'Standing hamstring curls',
@@ -506,32 +574,32 @@ export const EXERCISES = {
 // Which exercises make up each stage of the plan.
 export const PROGRAM = {
   ankle: {
-    protect: ['ankle_pumps', 'ankle_circles'],
+    protect: ['ankle_pumps', 'ankle_circles', 'toe_wiggles', 'ankle_in_out'],
     motion: ['ankle_pumps', 'ankle_alphabet', 'band_push_down', 'band_out'],
-    strength: ['calf_raises', 'band_out', 'band_in', 'toe_raises', 'balance'],
-    sport: ['ankle_circles', 'calf_raises', 'hops', 'side_hops', 'balance'],
+    strength: ['calf_raises', 'band_out', 'toe_raises', 'balance'],
+    sport: ['calf_raises', 'hops', 'side_hops', 'balance'],
     return: ['ankle_circles', 'calf_raises', 'hops', 'side_hops'],
   },
   wrist: {
-    protect: ['fist_open', 'wrist_bends_gentle'],
+    protect: ['fist_open', 'wrist_bends_gentle', 'wrist_side_gentle', 'palm_flips_gentle'],
     motion: ['wrist_bends', 'wrist_side', 'palm_flips', 'wrist_circles'],
     strength: ['grip_squeeze', 'wrist_curls', 'reverse_curls', 'bottle_twists'],
     sport: ['wrist_circles', 'quick_flicks', 'catch_squeeze', 'grip_squeeze'],
-    return: ['wrist_circles', 'quick_flicks', 'catch_squeeze'],
+    return: ['wrist_circles', 'quick_flicks', 'catch_squeeze', 'grip_squeeze'],
   },
   shoulder: {
-    protect: ['pendulum', 'table_slides'],
+    protect: ['pendulum', 'pendulum_sway', 'elbow_bends', 'table_slides'],
     motion: ['pendulum', 'table_slides', 'side_raise_gentle', 'cross_body'],
     strength: ['wall_slides', 'outward_rotation', 'rows', 'side_raise'],
     sport: ['arm_circles', 'overhead_reach', 'outward_rotation', 'throw_motion'],
-    return: ['arm_circles', 'overhead_reach', 'throw_motion'],
+    return: ['arm_circles', 'overhead_reach', 'rows', 'throw_motion'],
   },
   hamstring: {
-    protect: ['heel_slides', 'hamstring_squeeze'],
-    motion: ['heel_slides', 'prone_knee_bends', 'leg_raise_stretch'],
+    protect: ['heel_slides', 'hamstring_squeeze', 'gentle_knee_bends'],
+    motion: ['heel_slides', 'prone_knee_bends', 'leg_raise_stretch', 'curl_hold'],
     strength: ['standing_curls', 'kick_backs', 'curl_hold', 'leg_raise_stretch'],
     sport: ['leg_swings', 'high_knees', 'butt_kicks', 'standing_curls'],
-    return: ['leg_swings', 'high_knees', 'butt_kicks'],
+    return: ['leg_swings', 'high_knees', 'butt_kicks', 'kick_backs'],
   },
 }
 

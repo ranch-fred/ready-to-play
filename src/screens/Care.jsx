@@ -1,35 +1,58 @@
 import { Screen } from '../components/Screen'
 import { recovery } from '../logic/recovery'
+import { pickPlace, productsFor, shopLink, mapLink } from '../data/care'
 
-function mapLink(search, town) {
-  const where = town ? `near ${town}` : 'near me'
-  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${search} ${where}`)}`
+// Where to go and what to get, chosen for this injury. Used as the Care tab and as its own screen.
+export function CareView({ partId, outcome, lastResult, stage, cantWalk, town }) {
+  const place = pickPlace({ partId, outcome, lastResult })
+  const products = productsFor({ partId, severity: outcome?.severity, stage, cantWalk })
+  const relief = recovery.relief[partId]
+  const tips = relief ? ((stage ?? 0) <= 1 ? relief.early : relief.later).slice(0, 3) : []
+
+  return (
+    <>
+      <p className="section-label">Where to go</p>
+      <a className="card place-pick" href={mapLink(place.search, town)} target="_blank" rel="noopener noreferrer">
+        <p className="card-title">{place.name}</p>
+        <p className="muted">{place.why}</p>
+        <span className="btn primary small">Open in Maps</span>
+      </a>
+
+      {products.length > 0 && (
+        <>
+          <p className="section-label">What to get</p>
+          <div className="products">
+            {products.map((p) => (
+              <a key={p.name} className="product" href={shopLink(p.search)} target="_blank" rel="noopener noreferrer">
+                <span className="product-text">
+                  <span className="product-name">{p.name}</span>
+                  <span className="muted">{p.why}</span>
+                </span>
+                <span className="shop">Shop →</span>
+              </a>
+            ))}
+          </div>
+        </>
+      )}
+
+      {tips.length > 0 && (
+        <>
+          <p className="section-label">Pain relief</p>
+          <div className="card">
+            <ul className="list">
+              {tips.map((t) => <li key={t}>{t}</li>)}
+            </ul>
+          </div>
+        </>
+      )}
+    </>
+  )
 }
 
-export function Care({ town, onBack }) {
-  const { care } = recovery
+export function Care({ partId, outcome, lastResult, stage, cantWalk, town, onBack }) {
   return (
-    <Screen onBack={onBack} title="Find care near you" subtitle={town ? `Showing places near ${town}.` : 'Opens a map of places near you.'}>
-      <div className="card danger">
-        <p className="card-title">Call 911 or go to the ER if:</p>
-        <ul className="list">
-          {care.emergencySigns.map((s) => <li key={s}>{s}</li>)}
-        </ul>
-        <a className="btn danger-btn" href="tel:911">Call 911</a>
-      </div>
-
-      <div className="card cleared">
-        <p className="card-title">Your school's athletic trainer</p>
-        <p className="muted">{care.trainer}</p>
-      </div>
-
-      {care.places.map((p) => (
-        <a key={p.label} className="card place" href={mapLink(p.search, town)} target="_blank" rel="noopener noreferrer">
-          <p className="card-title">{p.label}</p>
-          <p className="muted">{p.when}</p>
-          <p className="go">Show on map →</p>
-        </a>
-      ))}
+    <Screen onBack={onBack} title="Care">
+      <CareView partId={partId} outcome={outcome} lastResult={lastResult} stage={stage} cantWalk={cantWalk} town={town} />
     </Screen>
   )
 }

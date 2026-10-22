@@ -1,81 +1,259 @@
 {
   "policy": {
     "cushion": 1.25,
-    "note": "The plan starts at the safe end of the range plus a 25% cushion. Good check-ins move the date earlier. It never moves later; if recovery runs past it, the app sends you to your athletic trainer.",
+    "note": "The plan starts at the safe end of the range plus a 25% cushion. Good check-ins move the date earlier. It never moves later; if recovery runs past it, the app sends you to a doctor.",
     "worseBy": 0.08,
     "worseStreakForTrainer": 2
   },
-
   "safetyQuestion": {
     "id": "new_numbness_or_spike",
     "question": "Since yesterday, any new numbness or tingling, or a sudden jump in pain or swelling?",
     "action": "see_care_today"
   },
-
   "checkIns": {
     "ankle": [
-      { "id": "pain", "type": "scale", "question": "How bad is the pain right now? (0-10)" },
-      { "id": "walk", "question": "How are you walking today?", "options": ["Normally", "With a limp", "Can't put weight on it"] },
-      { "id": "rom", "question": "Point your toes up and down and draw circles. How far does it move?", "options": ["All the way", "Part of the way", "Barely"] },
-      { "id": "swelling", "question": "How swollen is it today?", "options": ["None", "A little", "A lot"] },
-      { "id": "balance", "question": "Can you stand on just the hurt foot for 30 seconds?", "options": ["Yes, steady", "Yes, but wobbly", "No"] }
+      {
+        "id": "pain",
+        "type": "scale",
+        "question": "How bad is the pain right now? (0-10)"
+      },
+      {
+        "id": "walk",
+        "question": "How are you walking today?",
+        "options": [
+          "Normally",
+          "With a limp",
+          "Can't put weight on it"
+        ]
+      },
+      {
+        "id": "rom",
+        "question": "Point your toes up and down and draw circles. How far does it move?",
+        "options": [
+          "All the way",
+          "Part of the way",
+          "Barely"
+        ]
+      },
+      {
+        "id": "swelling",
+        "question": "How swollen is it today?",
+        "options": [
+          "None",
+          "A little",
+          "A lot"
+        ]
+      },
+      {
+        "id": "balance",
+        "question": "Can you stand on just the hurt foot for 30 seconds?",
+        "options": [
+          "Yes, steady",
+          "Yes, but wobbly",
+          "No"
+        ]
+      }
     ],
     "shoulder": [
-      { "id": "pain", "type": "scale", "question": "How bad is the pain right now? (0-10)" },
-      { "id": "overhead", "question": "Can you lift your arm straight overhead?", "options": ["Yes, no pain", "With pain or only partway", "No"] },
-      { "id": "reach_back", "question": "Can you reach behind your back like tucking in a shirt?", "options": ["Yes, no pain", "With pain", "No"] },
-      { "id": "daily", "question": "Everyday things today (backpack, brushing hair)?", "options": ["No pain", "Some pain", "Couldn't do them"] },
-      { "id": "night", "question": "Did it hurt while you were sleeping last night?", "options": ["No", "A little", "It woke me up"] }
+      {
+        "id": "pain",
+        "type": "scale",
+        "question": "How bad is the pain right now? (0-10)"
+      },
+      {
+        "id": "overhead",
+        "question": "Can you lift your arm straight overhead?",
+        "options": [
+          "Yes, no pain",
+          "With pain or only partway",
+          "No"
+        ]
+      },
+      {
+        "id": "reach_back",
+        "question": "Can you reach behind your back like tucking in a shirt?",
+        "options": [
+          "Yes, no pain",
+          "With pain",
+          "No"
+        ]
+      },
+      {
+        "id": "daily",
+        "question": "Everyday things today (backpack, brushing hair)?",
+        "options": [
+          "No pain",
+          "Some pain",
+          "Couldn't do them"
+        ]
+      },
+      {
+        "id": "night",
+        "question": "Did it hurt while you were sleeping last night?",
+        "options": [
+          "No",
+          "A little",
+          "It woke me up"
+        ]
+      }
     ],
     "hamstring": [
-      { "id": "pain", "type": "scale", "question": "How bad is the pain right now? (0-10)" },
-      { "id": "walk", "question": "How are you walking today?", "options": ["Normally", "With a limp", "Barely"] },
-      { "id": "bend_knee", "question": "Lying on your stomach, bend your knee against light resistance. How does it feel?", "options": ["No pain", "Some pain", "Couldn't do it"] },
-      { "id": "stretch", "question": "Gently straighten your leg and lean forward a little. How does it feel?", "options": ["Easy", "Tight or sore", "Couldn't do it"] },
-      { "id": "jog", "question": "Could you jog right now?", "options": ["Yes", "Maybe, carefully", "No"] }
+      {
+        "id": "pain",
+        "type": "scale",
+        "question": "How bad is the pain right now? (0-10)"
+      },
+      {
+        "id": "walk",
+        "question": "How are you walking today?",
+        "options": [
+          "Normally",
+          "With a limp",
+          "Barely"
+        ]
+      },
+      {
+        "id": "bend_knee",
+        "question": "Lying on your stomach, bend your knee against light resistance. How does it feel?",
+        "options": [
+          "No pain",
+          "Some pain",
+          "Couldn't do it"
+        ]
+      },
+      {
+        "id": "stretch",
+        "question": "Gently straighten your leg and lean forward a little. How does it feel?",
+        "options": [
+          "Easy",
+          "Tight or sore",
+          "Couldn't do it"
+        ]
+      },
+      {
+        "id": "jog",
+        "question": "Could you jog right now?",
+        "options": [
+          "Yes",
+          "Maybe, carefully",
+          "No"
+        ]
+      }
     ],
     "wrist": [
-      { "id": "pain", "type": "scale", "question": "How bad is the pain right now? (0-10)" },
-      { "id": "bend", "question": "Can you bend your wrist up and down?", "options": ["Yes, no pain", "With pain", "No"] },
-      { "id": "grip", "question": "Can you grip a water bottle and twist the cap?", "options": ["Yes, no pain", "With pain", "No"] },
-      { "id": "swelling", "question": "How swollen is it today?", "options": ["None", "A little", "A lot"] },
-      { "id": "weight", "question": "Can you put weight on your hand (push-up position)?", "options": ["Yes", "With pain", "No"] }
+      {
+        "id": "pain",
+        "type": "scale",
+        "question": "How bad is the pain right now? (0-10)"
+      },
+      {
+        "id": "bend",
+        "question": "Can you bend your wrist up and down?",
+        "options": [
+          "Yes, no pain",
+          "With pain",
+          "No"
+        ]
+      },
+      {
+        "id": "grip",
+        "question": "Can you grip a water bottle and twist the cap?",
+        "options": [
+          "Yes, no pain",
+          "With pain",
+          "No"
+        ]
+      },
+      {
+        "id": "swelling",
+        "question": "How swollen is it today?",
+        "options": [
+          "None",
+          "A little",
+          "A lot"
+        ]
+      },
+      {
+        "id": "weight",
+        "question": "Can you put weight on your hand (push-up position)?",
+        "options": [
+          "Yes",
+          "With pain",
+          "No"
+        ]
+      }
     ]
   },
-
   "relief": {
     "ankle": {
-      "early": ["Ice wrapped in a towel for 20 minutes, a few times a day.", "Keep your ankle raised above your heart when resting.", "Wear a snug wrap or brace. Loosen it if your toes tingle or change color.", "Use crutches if walking makes you limp."],
-      "later": ["Ice for 15-20 minutes after exercise if it gets sore.", "Warm up with ankle circles before activity.", "Wear a lace-up or semi-rigid brace for sports."]
+      "early": [
+        "Ice wrapped in a towel for 20 minutes, a few times a day.",
+        "Keep your ankle raised above your heart when resting.",
+        "Wear a snug wrap or brace. Loosen it if your toes tingle or change color.",
+        "Use crutches if walking makes you limp."
+      ],
+      "later": [
+        "Ice for 15-20 minutes after exercise if it gets sore.",
+        "Warm up with ankle circles before activity.",
+        "Wear a lace-up or semi-rigid brace for sports."
+      ]
     },
     "shoulder": {
-      "early": ["Ice wrapped in a towel for 20 minutes, a few times a day.", "Sleep propped up, or with a pillow under your hurt arm.", "No throwing, lifting, or reaching overhead for now."],
-      "later": ["A warm shower or heat pad before exercises can loosen it up.", "Ice after exercise if it gets sore.", "Keep your shoulders back, not hunched forward."]
+      "early": [
+        "Ice wrapped in a towel for 20 minutes, a few times a day.",
+        "Sleep propped up, or with a pillow under your hurt arm.",
+        "No throwing, lifting, or reaching overhead for now."
+      ],
+      "later": [
+        "A warm shower or heat pad before exercises can loosen it up.",
+        "Ice after exercise if it gets sore.",
+        "Keep your shoulders back, not hunched forward."
+      ]
     },
     "hamstring": {
-      "early": ["Ice wrapped in a towel for 20 minutes, a few times a day.", "Skip heat for the first 2-3 days.", "Don't stretch into pain. Gentle only.", "Compression shorts or a wrap can help with swelling."],
-      "later": ["Heat or a warm shower before exercise, ice after if sore.", "Gentle foam rolling on the muscle, not right on the sore spot.", "Always warm up before running."]
+      "early": [
+        "Ice wrapped in a towel for 20 minutes, a few times a day.",
+        "Skip heat for the first 2-3 days.",
+        "Don't stretch into pain. Gentle only.",
+        "Compression shorts or a wrap can help with swelling."
+      ],
+      "later": [
+        "Heat or a warm shower before exercise, ice after if sore.",
+        "Gentle foam rolling on the muscle, not right on the sore spot.",
+        "Always warm up before running."
+      ]
     },
     "wrist": {
-      "early": ["Ice wrapped in a towel for 20 minutes, a few times a day.", "Keep it raised and wrapped or braced.", "Avoid catching, pushing, or carrying heavy things."],
-      "later": ["Warm water soaks before exercises can help it move.", "Ice after activity if it gets sore.", "Tape or brace it for sports until your trainer says otherwise."]
+      "early": [
+        "Ice wrapped in a towel for 20 minutes, a few times a day.",
+        "Keep it raised and wrapped or braced.",
+        "Avoid catching, pushing, or carrying heavy things."
+      ],
+      "later": [
+        "Warm water soaks before exercises can help it move.",
+        "Ice after activity if it gets sore.",
+        "Tape or brace it for sports until a doctor says otherwise."
+      ]
     },
     "medicine": "Talk to a parent, pharmacist, or doctor before taking any pain medicine."
   },
-
   "care": {
-    "emergencySigns": [
-      "A bone is sticking out or a joint looks badly out of place",
-      "The limb is numb, cold, or turning blue",
-      "You hit your head and feel confused, dizzy, or sick",
-      "Chest pain or trouble breathing"
-    ],
-    "trainer": "Start with your school's athletic trainer. They're free, they know sports injuries, and they can tell you if you need a doctor.",
     "places": [
-      { "label": "Urgent care", "search": "urgent care", "when": "Can't put weight on it, might need an X-ray, or swelling keeps getting worse." },
-      { "label": "Orthopedic walk-in", "search": "orthopedic urgent care", "when": "Bone and joint injuries. Many have walk-in hours." },
-      { "label": "Sports medicine doctor", "search": "sports medicine doctor", "when": "Not getting better after a week, or it keeps getting hurt again." },
-      { "label": "Physical therapy", "search": "physical therapy", "when": "Help with exercises and getting back to your sport." }
+      {
+        "label": "Urgent care",
+        "search": "urgent care",
+        "when": "Can't put weight on it, might need an X-ray, or swelling keeps getting worse."
+      },
+      {
+        "label": "Orthopedic walk-in",
+        "search": "orthopedic urgent care",
+        "when": "Bone and joint injuries. Many have walk-in hours."
+      },
+      {
+        "label": "Sports medicine doctor",
+        "search": "sports medicine doctor",
+        "when": "Not getting better after a week, or it keeps getting hurt again."
+      }
     ]
   }
 }

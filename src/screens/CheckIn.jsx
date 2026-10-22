@@ -79,7 +79,7 @@ export function CheckInResult({ injury, onDone, onFindCare }) {
   } else if (r.action === 'see_trainer') {
     badge = 'Get it checked'
     title = 'Worse two check-ins in a row'
-    copy = 'Show your athletic trainer or a doctor. Take it easy until then: rest, ice, and skip anything that hurts.'
+    copy = 'See a doctor. Take it easy until then: rest, ice, and skip anything that hurts.'
   } else if (r.shrunk > 0) {
     badge = 'Getting better'
     title = `Your return date moved up ${r.shrunk} day${r.shrunk === 1 ? '' : 's'}`
@@ -105,7 +105,7 @@ export function CheckInResult({ injury, onDone, onFindCare }) {
         <p className="result-copy">{copy}</p>
       </div>
       {r.overdue && r.action === 'plan' && (
-        <div className="card note"><p>This is taking longer than the plan expected. Have your athletic trainer or a doctor take a look.</p></div>
+        <div className="card note"><p>This is taking longer than the plan expected. Have a doctor take a look.</p></div>
       )}
       {r.painHigh && r.action === 'plan' && (
         <div className="card note"><p>Your pain is high today. If it stays this high or gets worse, get it checked.</p></div>

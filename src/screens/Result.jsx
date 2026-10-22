@@ -3,9 +3,9 @@ import { Screen } from '../components/Screen'
 import { rules, addDays, formatDate } from '../logic/triage'
 import { paddedDays } from '../logic/recovery'
 
-const TONE = { emergency: 'danger', see_care_today: 'alert', see_trainer: 'caution', plan: 'good' }
+const TONE = { see_care_today: 'alert', see_trainer: 'caution', plan: 'good' }
 
-export function Result({ outcome, onContinue, onRestart, onBack, onFindCare }) {
+export function Result({ outcome, onContinue, onBack, onFindCare }) {
   const action = rules.actions[outcome.action]
   const tone = TONE[outcome.action]
   const [today] = useState(() => new Date())
@@ -14,12 +14,7 @@ export function Result({ outcome, onContinue, onRestart, onBack, onFindCare }) {
     <Screen
       onBack={onBack}
       footer={
-        outcome.action === 'emergency' ? (
-          <>
-            <a className="btn danger-btn" href="tel:911">Call 911</a>
-            <button className="btn ghost" onClick={onRestart}>Back to start</button>
-          </>
-        ) : (
+        (
           <>
             {outcome.action !== 'plan' && <button className="btn primary" onClick={onFindCare}>Find care near me</button>}
             <button className={`btn ${outcome.action === 'plan' ? 'primary' : 'ghost'}`} onClick={onContinue}>
@@ -61,7 +56,7 @@ export function Result({ outcome, onContinue, onRestart, onBack, onFindCare }) {
         </div>
       )}
 
-      {outcome.action !== 'plan' && outcome.action !== 'emergency' && (
+      {outcome.action !== 'plan' && (
         <div className="card">
           <p className="card-title">Until you're checked: RICE</p>
           <ul className="list">

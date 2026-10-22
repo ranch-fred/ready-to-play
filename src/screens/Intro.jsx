@@ -12,7 +12,7 @@ export function Intro({ onStart }) {
           Find out if you need a doctor, how to recover, and roughly when you'll be back. Takes about 2 minutes.
         </p>
         <ul className="intro-points">
-          <li>Checks for warning signs first</li>
+          <li>Quick check of how bad it is</li>
           <li>Day-by-day recovery plan</li>
           <li>Return date that's honest, not hopeful</li>
         </ul>

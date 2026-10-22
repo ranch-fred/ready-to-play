@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
 import { rules, addDays, formatDate, phaseRanges } from '../logic/triage'
 import { recovery, startPlan } from '../logic/recovery'
-import { todayPlan, dayNumber, STAGES } from '../logic/plan'
+import { todayPlan, dayNumber, STAGES, ROUNDS, WORK_SECONDS, BREAK_SECONDS, stageGoals } from '../logic/plan'
 import { EXERCISES, PROGRAM } from '../data/exercises'
+import { CareView } from './Care'
 
 const STATUS = {
   plan: { label: 'Recovering', tone: 'good' },
@@ -17,6 +18,7 @@ const TABS = [
   { id: 'home', label: 'Home', icon: 'M3 11l9-8 9 8v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z' },
   { id: 'today', label: 'Today', icon: 'M6.5 6.5v11M17.5 6.5v11M3.5 9v6M20.5 9v6M6.5 12h11' },
   { id: 'map', label: 'Map', icon: 'M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11zM12 12.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5z' },
+  { id: 'care', label: 'Care', icon: 'M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10zM12 9v5M9.5 11.5h5' },
 ]
 
 function useNow() {
@@ -48,7 +50,7 @@ function Orb({ target, offsetDays }) {
   )
 }
 
-export function Home({ profile, injury, onNewInjury, onCheckIn, onFindCare, onUpdateInjury, onStartSession, startTab = 'home' }) {
+export function Home({ profile, injury, onNewInjury, onCheckIn, onUpdateInjury, onStartSession, startTab = 'home' }) {
   const [tab, setTab] = useState(startTab)
   const { outcome } = injury
   const part = rules.injuries[injury.partId]
@@ -67,8 +69,8 @@ export function Home({ profile, injury, onNewInjury, onCheckIn, onFindCare, onUp
   const last = plan?.lastResult
   const today = plan ? todayPlan({ ...injury, plan }, day) : null
   const phase = today ? { ...phaseRanges(injury.partId, plan.projected)[today.stage], index: today.stage, count: STAGES.length } : null
-  const relief = recovery.relief[injury.partId]
-  const tips = relief && phase ? (phase.index <= 1 ? relief.early : relief.later) : null
+  const walkQ = recovery.checkIns[injury.partId]?.find((q) => q.id === 'walk')
+  const cantWalk = !!walkQ && today?.lastAnswers?.walk === walkQ.options[2]
   const backDate = plan ? addDays(new Date(injury.date).setHours(0, 0, 0, 0), plan.projected) : null
 
   return (
@@ -121,8 +123,8 @@ export function Home({ profile, injury, onNewInjury, onCheckIn, onFindCare, onUp
                     {last.action === 'see_care_today'
                       ? 'Your last check-in showed new numbness or a sudden jump in pain or swelling. Get it checked today.'
                       : last.action === 'see_trainer'
-                        ? 'You were worse two check-ins in a row. Show your athletic trainer or a doctor.'
-                        : 'This is taking longer than the plan expected. Have your athletic trainer take a look.'}
+                        ? 'You were worse two check-ins in a row. See a doctor.'
+                        : 'This is taking longer than the plan expected. Have a doctor take a look.'}
                   </p>
                 </div>
               )}
@@ -144,7 +146,7 @@ export function Home({ profile, injury, onNewInjury, onCheckIn, onFindCare, onUp
             </div>
           )}
 
-          <button className="btn ghost" onClick={onFindCare}>Find care near me</button>
+          <button className="btn ghost" onClick={() => setTab('care')}>Find care</button>
           <button className="btn ghost" onClick={onNewInjury}>Report a new injury</button>
 
           {DEMO && plan && (
@@ -159,22 +161,21 @@ export function Home({ profile, injury, onNewInjury, onCheckIn, onFindCare, onUp
       )}
 
       {tab === 'today' && (
-        <TodayTab
-          today={today}
-          outcome={outcome}
-          tips={tips}
-          checkedToday={checkedToday}
-          onCheckIn={() => onCheckIn(day)}
-          onStart={(sets) => onStartSession(sets)}
-        />
+        <TodayTab today={today} checkedToday={checkedToday} onCheckIn={() => onCheckIn(day)} onStart={onStartSession} />
+      )}
+
+      {tab === 'care' && (
+        <>
+          <h1 className="title">Care</h1>
+          <CareView partId={injury.partId} outcome={outcome} lastResult={plan?.lastResult} stage={today?.stage ?? 0} cantWalk={cantWalk} town={profile?.town} />
+        </>
       )}
 
       {tab === 'map' && (
         <>
           <h1 className="title">Your path</h1>
-          {plan && <p className="subtitle">{phase.count}-stage plan · your check-ins move you along it</p>}
           {plan ? (
-            <PathMap partId={injury.partId} total={plan.projected} current={phase.index} startDate={injury.date} />
+            <PathMap partId={injury.partId} total={plan.projected} current={phase.index} startDate={injury.date} answers={today?.lastAnswers} today={today} />
           ) : (
             <div className="card"><p>Your path appears once your plan starts.</p></div>
           )}
@@ -195,225 +196,208 @@ export function Home({ profile, injury, onNewInjury, onCheckIn, onFindCare, onUp
   )
 }
 
-function TodayTab({ today, outcome, tips, checkedToday, onCheckIn, onStart }) {
-  const [sets, setSets] = useState(today?.suggestedSets ?? 2)
-  const [showTips, setShowTips] = useState(false)
-
+function TodayTab({ today, checkedToday, onCheckIn, onStart }) {
   if (!today) {
     return (
       <>
         <h1 className="title">Today</h1>
-        <div className="card"><p>Your exercises start once your athletic trainer or a doctor has checked the injury.</p></div>
-        {outcome.confirmWithTrainer && <div className="card note"><p>Have your athletic trainer or a doctor confirm what this injury is.</p></div>}
+        <div className="card"><p>Your exercises start once a doctor has checked the injury.</p></div>
       </>
     )
   }
-
-  const minutes = Math.max(1, Math.round((today.exercises.reduce((s, e) => s + e.duration + 12, 0) * sets + today.exercises.length * 20) / 60))
-  const { moved, changes, stageInfo } = today
+  const { moved, stageInfo, exercises } = today
+  const minutes = Math.round((exercises.length * (ROUNDS * WORK_SECONDS + (ROUNDS - 1) * BREAK_SECONDS + 12)) / 60)
 
   return (
     <>
-      <h1 className="title">Today's plan</h1>
-      <p className="subtitle">
-        Stage {today.stage + 1} of {STAGES.length} · {stageInfo.name}
-      </p>
+      <h1 className="title">Today</h1>
+      <div className="today-stage">
+        <span className="stage-chip">{stageInfo.name}</span>
+        {moved > 0 && <span className="move-tag up">↑ Moved up</span>}
+        {moved < 0 && <span className="move-tag down">↓ Easier today</span>}
+      </div>
 
-      {moved !== 0 && (
-        <div className={`card change ${moved > 0 ? 'up' : 'down'}`}>
-          <p className="eyebrow">{moved > 0 ? 'Your plan moved up' : 'Easier plan today'}</p>
-          <p className="card-title">
-            {STAGES[today.previous].name} → {stageInfo.name}
-          </p>
-          {changes.length > 0 && (
-            <div className="because">
-              <p className="muted">Because of your check-in:</p>
-              {changes.map((c) => <p key={c.text} className="change-what">{c.text}</p>)}
-            </div>
-          )}
-        </div>
-      )}
-      {moved === 0 && changes.length > 0 && (
-        <div className="card change same">
-          <p className="muted">Since last time: <b className="change-what">{changes[0].text}</b>. Your exercises adjust every time you check in.</p>
-        </div>
-      )}
-      {today.held && (
-        <div className="card note">
-          <p>
-            You're feeling great! The next stage unlocks on <b>{formatDate(today.unlockDate)}</b> so the injury has time to heal underneath.
-          </p>
-        </div>
-      )}
-      {!checkedToday && (
-        <div className="card note">
-          <p>Check in first so today's exercises match how you feel today.</p>
-          <button className="btn ghost small" onClick={onCheckIn}>Do today's check-in</button>
-        </div>
-      )}
-      {today.easy && (
-        <div className="card note">
-          <p>Pain was {today.pain}/10 at your last check-in, so moves are smaller and there are fewer reps.</p>
-        </div>
-      )}
+      <div className="rhythm" aria-label="Each exercise: 3 rounds of 30 seconds with 5 second breaks">
+        <div><b>3</b><span>rounds</span></div>
+        <div><b>30s</b><span>on</span></div>
+        <div><b>5s</b><span>break</span></div>
+      </div>
 
-      <div className="ex-list">
-        {today.exercises.map((e, i) => (
-          <div className="ex-item" key={e.id}>
+      <ol className="ex-list plain">
+        {exercises.map((e, i) => (
+          <li className="ex-item" key={e.id}>
             <span className="ex-num">{i + 1}</span>
-            <div className="ex-text">
-              <p className="ex-name">{e.name}</p>
-              <p className="muted">{e.why}</p>
-            </div>
-            <span className="ex-amount">{e.reps ? `${e.reps} reps` : `${e.seconds}s`}</span>
-          </div>
+            <span className="ex-name">{e.name}</span>
+          </li>
         ))}
-      </div>
+      </ol>
 
-      {today.doneToday ? (
-        <div className="card center">
-          <p className="card-title">Done for today ✓</p>
-          <p className="muted">You did {today.doneToday.sets} {today.doneToday.sets === 1 ? 'round' : 'rounds'}. Want more? You can go again.</p>
-        </div>
-      ) : null}
-
-      <div className="rounds">
-        <p className="rounds-label">How many rounds?</p>
-        <div className="seg" role="radiogroup" aria-label="Rounds">
-          {[1, 2, 3, 4].map((n) => (
-            <button key={n} role="radio" aria-checked={sets === n} className={sets === n ? 'on' : ''} onClick={() => setSets(n)}>
-              {n}
-            </button>
-          ))}
-        </div>
-      </div>
-      <button className="btn primary" onClick={() => onStart(sets)}>
-        ▶ {today.doneToday ? 'Go again' : 'Start session'} · about {minutes} min
+      <button className="btn primary" onClick={onStart}>
+        ▶ {today.doneToday ? 'Go again' : 'Start'} · {minutes} min
       </button>
-      <p className="muted center tight">Each exercise: watch the demo, then do it with the countdown.</p>
-
-      {tips && (
-        <div className="card">
-          <button className="tips-toggle" onClick={() => setShowTips(!showTips)} aria-expanded={showTips}>
-            <span className="card-title">Pain relief tips</span>
-            <span aria-hidden="true">{showTips ? '−' : '+'}</span>
-          </button>
-          {showTips && (
-            <>
-              <ul className="list">
-                {tips.map((t) => <li key={t}>{t}</li>)}
-              </ul>
-              <p className="muted">{recovery.relief.medicine}</p>
-            </>
-          )}
-        </div>
+      {today.doneToday && <p className="muted center tight">Done today ✓</p>}
+      {!checkedToday && (
+        <button className="link-btn" onClick={onCheckIn}>Check in first so this matches how you feel →</button>
       )}
-
-      <div className="card cleared">
-        <p className="card-title">Before you play again</p>
-        <p className="muted">Get cleared by your athletic trainer or a doctor. ReadyToPlay never clears you by itself.</p>
-      </div>
     </>
   )
 }
 
-function smoothPath(pts) {
-  if (pts.length < 2) return ''
-  let path = `M ${pts[0].x} ${pts[0].y}`
-  for (let i = 1; i < pts.length; i++) {
-    const prev = pts[i - 1]
-    const cur = pts[i]
-    const midY = (prev.y + cur.y) / 2
-    path += ` C ${prev.x} ${midY}, ${cur.x} ${midY}, ${cur.x} ${cur.y}`
+// Footprints walking from stage to stage. Each hop between two stage circles is a curve; prints are placed
+// along it at even spacing, alternating left and right foot, turned to face the direction of travel.
+function bezier(a, b, t) {
+  const midY = (a.y + b.y) / 2
+  const p = [a, { x: a.x, y: midY }, { x: b.x, y: midY }, b]
+  const u = 1 - t
+  return {
+    x: u * u * u * p[0].x + 3 * u * u * t * p[1].x + 3 * u * t * t * p[2].x + t * t * t * p[3].x,
+    y: u * u * u * p[0].y + 3 * u * u * t * p[1].y + 3 * u * t * t * p[2].y + t * t * t * p[3].y,
   }
-  return path
 }
 
-function PathLine({ containerRef, current, deps }) {
-  const [paths, setPaths] = useState(null)
+const STEP = 17
+
+function Footsteps({ containerRef, current, deps }) {
+  const [prints, setPrints] = useState([])
 
   useEffect(() => {
     const container = containerRef.current
     if (!container) return
     const measure = () => {
       const base = container.getBoundingClientRect()
-      const nodes = container.querySelectorAll('.path-node')
-      const pts = Array.from(nodes).map((n) => {
-        const r = n.getBoundingClientRect()
-        return { x: r.left + r.width / 2 - base.left, y: r.top + r.height / 2 - base.top }
+      // Walk from just under one stage (below its label and any open card) to just above the next circle.
+      const stops = Array.from(container.querySelectorAll('.path-stop')).map((stop) => {
+        const node = stop.querySelector('.path-node').getBoundingClientRect()
+        const whole = stop.getBoundingClientRect()
+        return { x: node.left + node.width / 2 - base.left, top: node.top - base.top, bottom: whole.bottom - base.top }
       })
-      if (pts.length < 2) return setPaths(null)
-      const doneEnd = Math.min(Math.max(current, 0), pts.length - 1)
-      setPaths({
-        track: smoothPath(pts),
-        done: doneEnd > 0 ? smoothPath(pts.slice(0, doneEnd + 1)) : '',
-      })
+      const out = []
+      let foot = 0
+      for (let i = 0; i + 1 < stops.length; i++) {
+        const a = { x: stops[i].x, y: stops[i].bottom + 6 }
+        const b = { x: stops[i + 1].x, y: stops[i + 1].top - 8 }
+        const samples = Array.from({ length: 80 }, (_, k) => bezier(a, b, k / 79))
+        let dist = 0
+        let next = STEP / 2
+        for (let k = 1; k < samples.length; k++) {
+          const p0 = samples[k - 1]
+          const p1 = samples[k]
+          const seg = Math.hypot(p1.x - p0.x, p1.y - p0.y)
+          while (dist + seg >= next) {
+            const f = (next - dist) / seg
+            const x = p0.x + (p1.x - p0.x) * f
+            const y = p0.y + (p1.y - p0.y) * f
+            next += STEP
+            const angle = (Math.atan2(p1.y - p0.y, p1.x - p0.x) * 180) / Math.PI + 90
+            const side = foot++ % 2 === 0 ? -1 : 1
+            const nx = -(p1.y - p0.y) / seg
+            const ny = (p1.x - p0.x) / seg
+            out.push({ x: x + nx * side * 7, y: y + ny * side * 7, angle, side, done: i < current })
+          }
+          dist += seg
+        }
+      }
+      setPrints(out)
     }
     measure()
     const ro = new ResizeObserver(measure)
     ro.observe(container)
-    window.addEventListener('resize', measure)
-    return () => {
-      ro.disconnect()
-      window.removeEventListener('resize', measure)
-    }
+    return () => ro.disconnect()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [current, ...deps])
 
-  if (!paths) return null
   return (
-    <svg className="path-line" aria-hidden="true">
-      <path d={paths.track} className="path-line-track" />
-      {paths.done && (
-        <>
-          <path d={paths.done} className="path-line-glow" />
-          <path d={paths.done} className="path-line-done" />
-        </>
-      )}
+    <svg className="footsteps" aria-hidden="true">
+      {prints.map((p, i) => (
+        <g key={i} transform={`translate(${p.x} ${p.y}) rotate(${p.angle}) scale(${p.side} 1)`} className={p.done ? 'done' : ''}>
+          <ellipse cx="0" cy="1.5" rx="3.6" ry="5.6" />
+          <ellipse cx="0.4" cy="-6.6" rx="2.6" ry="2.2" />
+          <circle cx="-2.6" cy="-9.4" r="1" />
+          <circle cx="-0.6" cy="-10.4" r="1" />
+          <circle cx="1.6" cy="-10.2" r="0.95" />
+          <circle cx="3.3" cy="-9" r="0.85" />
+        </g>
+      ))}
     </svg>
   )
 }
 
-function PathMap({ partId, total, current, startDate }) {
+function Goals({ goals }) {
+  return (
+    <ul className="goals">
+      {goals.map((g) => (
+        <li key={g.label} className={g.done ? 'done' : ''}>
+          <span className="goal-box" aria-hidden="true">{g.done ? '✓' : ''}</span>
+          {g.label}
+        </li>
+      ))}
+    </ul>
+  )
+}
+
+function PathMap({ partId, total, current, startDate, answers, today }) {
   const stages = phaseRanges(partId, total)
-  const [open, setOpen] = useState(current)
+  const [open, setOpen] = useState(-1)
   const start = new Date(startDate).setHours(0, 0, 0, 0)
   const OFFSETS = [0, 60, 0, -60, 0]
   const containerRef = useRef(null)
+  const next = current + 1 < stages.length ? current + 1 : null
+  const returnGoals = [{ label: 'Reach your return date', done: false }, { label: 'A doctor clears you to play', done: false }]
+  const goalsFor = (i) => (i === stages.length - 1 ? returnGoals : stageGoals(partId, i, answers))
+  const nextGoals = next !== null ? goalsFor(next) : []
+  const doneCount = nextGoals.filter((g) => g.done).length
 
   return (
-    <div className="path" ref={containerRef}>
-      <PathLine containerRef={containerRef} current={current} deps={[open, stages.length]} />
-      {stages.map((s, i) => {
-        const state = i < current ? 'done' : i === current ? 'now' : 'locked'
-        const last = i === stages.length - 1
-        return (
-          <div key={s.id} className="path-stop" style={{ '--x': `${OFFSETS[i % OFFSETS.length]}px` }}>
-            <button className={`path-node ${state}`} onClick={() => setOpen(open === i ? -1 : i)} aria-expanded={open === i}>
-              {state === 'done' ? '✓' : last ? '★' : i + 1}
-            </button>
-            <p className="path-label">{s.name}</p>
-            <p className="path-days">
-              {state === 'done'
-                ? 'Done'
-                : state === 'now'
-                  ? "You're here"
-                  : last
-                    ? `Around ${formatDate(addDays(start, total))}`
-                    : `About ${formatDate(addDays(start, Math.max(s.startDay - 1, 0)))}`}
-            </p>
-            {open === i && (
-              <div className="card path-card">
-                {state === 'locked' && <p className="eyebrow">Unlocks when your check-ins are ready for it</p>}
-                <ul className="list">
-                  {(PROGRAM[partId]?.[s.id] ?? []).map((id) => <li key={id}>{EXERCISES[id].name}</li>)}
-                  {last && <li>Your athletic trainer or a doctor clears you to play</li>}
-                </ul>
-              </div>
-            )}
+    <>
+      {next !== null && (
+        <div className="card next-goal">
+          <div className="next-head">
+            <p className="eyebrow">To unlock {stages[next].name}</p>
+            <span className="goal-count">{doneCount}/{nextGoals.length}</span>
           </div>
-        )
-      })}
-    </div>
+          <Goals goals={nextGoals} />
+          {today?.held && <p className="muted">Unlocks {formatDate(today.unlockDate)} at the earliest, so it can heal.</p>}
+          {!answers && <p className="muted">Do a check-in to see your progress.</p>}
+        </div>
+      )}
+      <div className="path" ref={containerRef}>
+        <Footsteps containerRef={containerRef} current={current} deps={[open, stages.length]} />
+        {stages.map((s, i) => {
+          const state = i < current ? 'done' : i === current ? 'now' : 'locked'
+          const last = i === stages.length - 1
+          return (
+            <div key={s.id} className="path-stop" style={{ '--x': `${OFFSETS[i % OFFSETS.length]}px` }}>
+              <button className={`path-node ${state}`} onClick={() => setOpen(open === i ? -1 : i)} aria-expanded={open === i}>
+                {state === 'done' ? '✓' : last ? '★' : i + 1}
+              </button>
+              <p className="path-label">{s.name}</p>
+              <p className="path-days">
+                {state === 'done'
+                  ? 'Done'
+                  : state === 'now'
+                    ? "You're here"
+                    : last
+                      ? `Around ${formatDate(addDays(start, total))}`
+                      : `About ${formatDate(addDays(start, Math.max(s.startDay - 1, 0)))}`}
+              </p>
+              {open === i && (
+                <div className="card path-card">
+                  {state === 'locked' && i !== next && (
+                    <>
+                      <p className="eyebrow">Unlocks when</p>
+                      <Goals goals={goalsFor(i)} />
+                    </>
+                  )}
+                  <p className="eyebrow">Exercises</p>
+                  <ul className="list">
+                    {(PROGRAM[partId]?.[s.id] ?? []).map((id) => <li key={id}>{EXERCISES[id].name}</li>)}
+                  </ul>
+                </div>
+              )}
+            </div>
+          )
+        })}
+      </div>
+    </>
   )
 }
