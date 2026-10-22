@@ -9,6 +9,8 @@ import { Home } from './screens/Home'
 import { CheckIn, CheckInResult } from './screens/CheckIn'
 import { Care } from './screens/Care'
 import { Loading } from './screens/Loading'
+import { Session } from './screens/Session'
+import { todayPlan, dayNumber } from './logic/plan'
 import { startPlan, applyCheckIn } from './logic/recovery'
 
 const FRESH = { screen: 'intro', partId: null, side: null, locations: [], flagIndex: 0, testIndex: 0, tests: {}, outcome: null }
@@ -189,9 +191,12 @@ export default function App() {
     case 'home':
       return (
         <Home
+          key={state.homeTab ?? 'home'}
+          startTab={state.homeTab}
           profile={saved.profile}
           injury={saved.injury}
           onUpdateInjury={saveInjury}
+          onStartSession={(sets) => go({ screen: 'session', sets, homeTab: 'today' })}
           onCheckIn={(day) => go({ screen: 'checkin', day })}
           onFindCare={() => go({ screen: 'care' })}
           onNewInjury={() => {
@@ -228,10 +233,34 @@ export default function App() {
       return (
         <CheckInResult
           injury={saved.injury}
-          onDone={() => setState({ ...FRESH, screen: 'home' })}
+          onDone={() => setState({ ...FRESH, screen: 'home', homeTab: 'today' })}
           onFindCare={() => go({ screen: 'care' })}
         />
       )
+
+    case 'session': {
+      const injury = saved.injury
+      const plan = injury.plan ?? startPlan(injury.partId, injury.outcome.estimate)
+      const day = dayNumber(injury)
+      const today = todayPlan({ ...injury, plan }, day)
+      return (
+        <Session
+          partId={injury.partId}
+          side={injury.side}
+          today={today}
+          sets={state.sets}
+          onExit={() => {
+            setHistory([])
+            setState({ ...FRESH, screen: 'home', homeTab: 'today' })
+          }}
+          onFinish={(sets) => {
+            saveInjury({ ...injury, plan: { ...plan, sessions: { ...plan.sessions, [day]: { sets, stage: today.stage } } } })
+            setHistory([])
+            setState({ ...FRESH, screen: 'home', homeTab: 'home' })
+          }}
+        />
+      )
+    }
 
     case 'care':
       return <Care town={saved?.profile?.town} onBack={back} />
