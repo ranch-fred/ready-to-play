@@ -23,6 +23,8 @@ export function isRecovered(plan, day) {
   if (!plan || day < plan.projected) return false
   const last = plan.checkIns?.[plan.checkIns.length - 1]
   if (!last) return true
+  // An old check-in with pain doesn't hold you back forever: it only blocks if it is from the last day or two.
+  if (day - last.day > 1) return true
   return last.day >= plan.projected || (last.answers?.pain ?? 0) < 4
 }
 

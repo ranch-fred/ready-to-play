@@ -34,6 +34,10 @@ export function setTheme(next) {
   listeners.forEach((l) => l())
 }
 
+export function getTheme() {
+  return current
+}
+
 export function useTheme() {
   return useSyncExternalStore(
     (cb) => {

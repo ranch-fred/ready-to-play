@@ -57,7 +57,8 @@ button, input { font: inherit; color: inherit; }
   min-height: 100dvh;
   display: flex;
   flex-direction: column;
-  padding: 12px 20px 24px;
+  /* Start a little lower so the back and settings buttons are easy to reach (and clear the status bar when installed). */
+  padding: calc(env(safe-area-inset-top, 0px) + 26px) 20px 24px;
 }
 
 .content { flex: 1; display: flex; flex-direction: column; gap: 12px; }
@@ -677,12 +678,13 @@ html { -webkit-tap-highlight-color: transparent; }
 /* Tab bar: a pill that glides under the active tab */
 .tabbar button { position: relative; z-index: 1; }
 .tab-pill {
-  position: absolute; top: 6px; bottom: calc(6px + env(safe-area-inset-bottom)); left: 12px;
-  width: calc((100% - 24px) / 4); border-radius: 14px;
+  --tp: 12px;
+  position: absolute; top: 8px; bottom: calc(8px + env(safe-area-inset-bottom)); left: var(--tp);
+  width: calc((100% - 2 * var(--tp)) / 4); border-radius: 14px;
   background: rgba(46, 230, 122, 0.13);
   transform: translateX(calc(var(--tab, 0) * 100%));
   /* No overshoot: a spring here would poke past the last tab */
-  transition: transform 0.45s var(--ease-out);
+  transition: transform 0.3s var(--ease-out);
   pointer-events: none;
 }
 
@@ -1108,3 +1110,33 @@ body::before {
 .theme-toggle button.on { color: #10131a; }
 .trend-delta { white-space: nowrap; }
 .trend-axis span:nth-child(2) { text-align: center; }
+
+/* Invisible look switcher, tucked right under the settings gear */
+.gear-wrap { position: relative; flex: none; }
+.theme-secret {
+  position: absolute; left: 0; top: 100%; width: 44px; height: 40px;
+  background: transparent; border: 0; padding: 0; opacity: 0; cursor: pointer;
+  -webkit-tap-highlight-color: transparent; outline: none; z-index: 3;
+}
+
+/* Recovery celebration */
+.celebrate { position: fixed; inset: 0; z-index: 90; display: grid; place-items: center; padding: 24px; background: rgba(10, 20, 40, 0.38); animation: celebrate-in 0.35s ease-out both; }
+@keyframes celebrate-in { from { opacity: 0; } to { opacity: 1; } }
+.confetti { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+.confetti i { position: absolute; top: -24px; display: block; opacity: 0; animation-name: confetti-fall; animation-timing-function: linear; animation-iteration-count: infinite; }
+@keyframes confetti-fall {
+  0% { transform: translate3d(0, -4vh, 0) rotate(0deg); opacity: 1; }
+  100% { transform: translate3d(var(--sway, 0px), 108vh, 0) rotate(var(--spin, 540deg)); opacity: 1; }
+}
+.celebrate-card {
+  position: relative; width: min(320px, 100%); text-align: center; padding: 22px 20px 20px; border-radius: 24px;
+  background: #141a24; color: #fff; border: 1px solid rgba(255,255,255,0.18);
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.35); animation: celebrate-pop 0.5s var(--spring, cubic-bezier(0.34, 1.56, 0.64, 1)) 0.25s both;
+}
+@keyframes celebrate-pop { from { transform: translateY(-40px) scale(0.9); opacity: 0; } to { transform: none; opacity: 1; } }
+.celebrate-emoji { font-size: 34px; margin: 0 0 4px; line-height: 1; }
+.celebrate-card h2 { font-size: 20px; margin: 0 0 6px; }
+.celebrate-card p { font-size: 14px; line-height: 1.4; margin: 0 0 14px; color: var(--muted); }
+.celebrate-card .celebrate-emoji { color: inherit; }
+@media (prefers-reduced-motion: reduce) { .confetti i { animation: none; opacity: 0; } }
+.celebrate-card .btn { width: 100%; }

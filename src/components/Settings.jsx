@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { createPortal } from 'react-dom'
-import { ThemeToggle, OstrichSvg } from './Mascot'
+import { OstrichSvg } from './Mascot'
 import { BUDDIES } from '../logic/journey'
 import { getPrefs, setPrefs } from '../logic/feedback'
 import { clearState } from '../logic/storage'
@@ -62,11 +62,6 @@ export function Settings({ profile, onSave, onClose }) {
             <span>Town or ZIP <em>(to find doctors near you)</em></span>
             <input value={town} onChange={(e) => setTown(e.target.value)} onBlur={commit} placeholder="e.g. Edison, NJ" autoComplete="address-level2" maxLength={40} />
           </label>
-        </div>
-
-        <p className="section-label">Look and feel</p>
-        <div className="card settings-card">
-          <ThemeToggle />
         </div>
 
         <p className="section-label">Your buddy</p>

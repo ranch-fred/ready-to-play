@@ -158,7 +158,8 @@
   left: 12px; right: 12px; bottom: calc(10px + env(safe-area-inset-bottom)); padding: 8px 8px;
   border-radius: 30px; border: 2px solid #fff; background: #fff; box-shadow: 0 6px 0 #bddcf7, 0 16px 30px rgba(48, 120, 200, 0.2);
 }
-:root[data-theme='play'] .tab-pill { border-radius: 22px; background: #e1f2ff; }
+:root[data-theme='play'] .tab-pill { --tp: 8px; bottom: 8px; border-radius: 22px; background: #e1f2ff; }
+:root[data-theme='play'] .celebrate-card { background: #fff; color: var(--text); border-color: #fff; }
 :root[data-theme='play'] .tabbar button.on { color: var(--accent-2); }
 :root[data-theme='play'] .screen.tabbed { padding-bottom: 120px; }
 

@@ -8,6 +8,8 @@ import { CareView } from './Care'
 import { CarePopup } from '../components/CarePopup'
 import { Mascot } from '../components/Mascot'
 import { Settings } from '../components/Settings'
+import { Celebration } from '../components/Celebration'
+import { sweepTheme } from '../logic/themeSweep'
 import { useTheme } from '../logic/theme'
 import { isRecovered, strengthInfo, buddyFace, TIERS, TIER_DAYS, STAGE_EMOJI } from '../logic/journey'
 
@@ -173,12 +175,22 @@ export function Home({ profile, injury, onNewInjury, onCheckIn, onUpdateInjury, 
     <div className="screen home tabbed">
       <header className="home-head">
         <div className="head-left">
+          <div className="gear-wrap">
           <button className="gear-btn" onClick={() => setShowSettings(true)} aria-label="Settings">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
               <circle cx="12" cy="12" r="3.2" />
               <path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.9.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.9-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.9V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z" />
             </svg>
           </button>
+          <button
+            className="theme-secret"
+            aria-label="Switch look"
+            onClick={(e) => {
+              const r = e.currentTarget.getBoundingClientRect()
+              sweepTheme(r.left + r.width / 2, r.top + r.height / 2)
+            }}
+          />
+          </div>
           <div className="logo small">READY<span>TO</span>PLAY</div>
         </div>
         <p className="hello">{profile?.name ? `Hi ${profile.name}` : `Day ${day}`}</p>
@@ -193,6 +205,16 @@ export function Home({ profile, injury, onNewInjury, onCheckIn, onUpdateInjury, 
       )}
 
       {showCare && care && <CarePopup care={care} onClose={closeCare} />}
+
+      {recovered && !injury.celebrated && !showCare && (
+        <Celebration
+          onStrengthen={() => {
+            onUpdateInjury({ ...injury, plan, celebrated: true })
+            setTab('today')
+            window.scrollTo(0, 0)
+          }}
+        />
+      )}
 
       <div className="pane" key={tab}>
       {tab === 'home' && (
@@ -526,6 +548,13 @@ function PathMap({ partId, total, current, strong, startDate, answers, today }) 
   const start = new Date(startDate).setHours(0, 0, 0, 0)
   const OFFSETS = [0, 60, 0, -60, 0]
   const containerRef = useRef(null)
+  // Open the map where you are, not at the very first stage.
+  useEffect(() => {
+    const t = setTimeout(() => {
+      containerRef.current?.querySelector('.path-node.now')?.scrollIntoView({ block: 'center', behavior: 'smooth' })
+    }, 350)
+    return () => clearTimeout(t)
+  }, [])
   const here = recoveredNow ? stages.length + strong.tier : current
   const nodes = [
     ...stages.map((s) => ({ key: s.id, emoji: STAGE_EMOJI[s.id], name: s.name, when: s.id === 'return' ? addDays(start, total) : addDays(start, Math.max(s.startDay - 1, 0)), stage: s })),
