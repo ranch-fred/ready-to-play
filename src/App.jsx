@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { rules, redFlagsFor, isTriggered, tailoredQuestions, stopFor, scoreAnswers, buildOutcome, mergeStops } from './logic/triage'
+import { rules, redFlagsFor, isTriggered, tailoredQuestions, stopFor, scoreAnswers, buildOutcome, mergeStops, carefulEstimate, recommendation } from './logic/triage'
 import { loadState, saveState } from './logic/storage'
 import { Intro } from './screens/Intro'
 import { PickPart, PickSide, PickLocation, RedFlag, SelfTest } from './screens/Triage'
@@ -129,8 +129,15 @@ export default function App() {
             if (state.testIndex + 1 < tests.length) return go({ tests: answers, stops, testIndex: state.testIndex + 1 })
             const { severity, addDays, notes, focus } = scoreAnswers(tests, answers)
             const outcome = mergeStops(buildOutcome({ partId, locationIds: locations.map((l) => l.id), severity, addDays, notes, focus }), stops)
-            // A plan gets the loading screen, then goes straight to the home tabs. Anything else shows the result screen.
+            // A plan gets the loading screen, then goes straight to the home tabs.
             if (outcome.action === 'plan') return go({ screen: 'loading', tests: answers, outcome })
+            // Serious answers still get a plan. Home opens with a care pop-up the person can close.
+            const estimate = carefulEstimate(partId, severity)
+            if (estimate) {
+              const rec = recommendation(outcome)
+              const care = { action: outcome.action, notes: outcome.notes ?? [], who: rec.who, when: rec.when }
+              return go({ screen: 'loading', tests: answers, outcome: { action: 'plan', severity, notes: [], estimate, focus, care } })
+            }
             finish(outcome)
           }}
         />
@@ -161,6 +168,8 @@ export default function App() {
                 outcome: state.outcome,
                 date: new Date().toISOString(),
                 plan: startPlan(partId, state.outcome.estimate),
+                care: state.outcome.care ?? null,
+                careSeen: false,
               },
             }
             saveState(next)

@@ -5,6 +5,7 @@ import { RecoveryCard } from '../components/RecoveryCard'
 import { todayPlan, dayNumber, STAGES, ROUNDS, WORK_SECONDS, BREAK_SECONDS, stageGoals } from '../logic/plan'
 import { EXERCISES, PROGRAM } from '../data/exercises'
 import { CareView } from './Care'
+import { CarePopup } from '../components/CarePopup'
 
 const STATUS = {
   plan: { label: 'Recovering', tone: 'good' },
@@ -57,6 +58,16 @@ function Orb({ target, offsetDays, heal }) {
 
 export function Home({ profile, injury, onNewInjury, onCheckIn, onUpdateInjury, onStartSession, startTab = 'home' }) {
   const [tab, setTab] = useState(startTab)
+  const { care } = injury
+  const [showCare, setShowCare] = useState(() => !!care && !injury.careSeen)
+  const closeCare = (toCareTab) => {
+    setShowCare(false)
+    if (!injury.careSeen) onUpdateInjury({ ...injury, careSeen: true })
+    if (toCareTab) {
+      setTab('care')
+      window.scrollTo(0, 0)
+    }
+  }
   const { outcome } = injury
   const part = rules.injuries[injury.partId]
   const spotIds = injury.locationIds ?? (injury.locationId ? [injury.locationId] : [])
@@ -85,6 +96,8 @@ export function Home({ profile, injury, onNewInjury, onCheckIn, onUpdateInjury, 
         <p className="hello">{profile?.name ? `Hi ${profile.name}` : `Day ${day}`}</p>
       </header>
 
+      {showCare && <CarePopup care={care} onClose={closeCare} />}
+
       <div className="pane" key={tab}>
       {tab === 'home' && (
         <>
@@ -93,6 +106,13 @@ export function Home({ profile, injury, onNewInjury, onCheckIn, onUpdateInjury, 
             <span className={`status ${status.tone}`}>{status.label}</span>
           </div>
           {spots.length > 0 && <p className="muted center">{spots.join(' · ')}</p>}
+          {care && (
+            <button className={`care-banner ${care.action === 'see_care_today' ? 'alert' : 'caution'}`} onClick={() => setShowCare(true)}>
+              <span className="care-banner-dot" aria-hidden="true" />
+              {care.action === 'see_care_today' ? 'Care recommended today' : 'Doctor visit recommended'}
+              <span className="care-banner-go">Details →</span>
+            </button>
+          )}
 
           {plan ? (
             <>
@@ -175,7 +195,7 @@ export function Home({ profile, injury, onNewInjury, onCheckIn, onUpdateInjury, 
       {tab === 'care' && (
         <>
           <h1 className="title">Care</h1>
-          <CareView partId={injury.partId} outcome={outcome} lastResult={plan?.lastResult} stage={today?.stage ?? 0} cantWalk={cantWalk} town={profile?.town} />
+          <CareView partId={injury.partId} outcome={care ? { ...outcome, action: care.action } : outcome} lastResult={plan?.lastResult} stage={today?.stage ?? 0} cantWalk={cantWalk} town={profile?.town} />
         </>
       )}
 
@@ -265,7 +285,9 @@ function bezier(a, b, t) {
   }
 }
 
-const STEP = 17
+const STEP = 28
+
+const FOOT_SOLE = 'M7 16C4.5 18.5 6 22 8.5 27c2 4 0 8 1 12 1 4 7.5 4.5 8-.5.5-4.5-1.5-7.5 0-12.5 1.5-5 2.5-9-.5-11.5C14 12.5 9.5 13 7 16Z'
 
 function Footsteps({ containerRef, current, deps }) {
   const [prints, setPrints] = useState([])
@@ -302,7 +324,7 @@ function Footsteps({ containerRef, current, deps }) {
             const side = foot++ % 2 === 0 ? -1 : 1
             const nx = -(p1.y - p0.y) / seg
             const ny = (p1.x - p0.x) / seg
-            out.push({ x: x + nx * side * 7, y: y + ny * side * 7, angle, side, done: i < current })
+            out.push({ x: x + nx * side * 8, y: y + ny * side * 8, angle, side, done: i < current })
           }
           dist += seg
         }
@@ -319,13 +341,13 @@ function Footsteps({ containerRef, current, deps }) {
   return (
     <svg className="footsteps" aria-hidden="true">
       {prints.map((p, i) => (
-        <g key={i} transform={`translate(${p.x} ${p.y}) rotate(${p.angle}) scale(${p.side} 1)`} className={p.done ? 'done' : ''}>
-          <ellipse cx="0" cy="1.5" rx="3.6" ry="5.6" />
-          <ellipse cx="0.4" cy="-6.6" rx="2.6" ry="2.2" />
-          <circle cx="-2.6" cy="-9.4" r="1" />
-          <circle cx="-0.6" cy="-10.4" r="1" />
-          <circle cx="1.6" cy="-10.2" r="0.95" />
-          <circle cx="3.3" cy="-9" r="0.85" />
+        <g key={i} transform={`translate(${p.x} ${p.y}) rotate(${p.angle}) scale(${-p.side * 0.62} 0.62) translate(-12.5 -23)`} className={p.done ? 'done' : ''}>
+          <path d={FOOT_SOLE} />
+          <circle cx="7.5" cy="8.5" r="3.2" />
+          <circle cx="12.2" cy="6.6" r="1.9" />
+          <circle cx="15.6" cy="7.6" r="1.8" />
+          <circle cx="18.6" cy="9.6" r="1.6" />
+          <circle cx="20.8" cy="12.6" r="1.35" />
         </g>
       ))}
     </svg>

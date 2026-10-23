@@ -76,6 +76,16 @@ export function mergeStops(outcome, stops = []) {
   return { action, severity: outcome.severity, notes }
 }
 
+// When the answers point to care, the person still gets a plan. This picks a cautious estimate to use until a doctor says otherwise.
+export function carefulEstimate(partId, severity) {
+  const est = rules.injuries[partId]?.estimates
+  if (!est) return null
+  const label = 'Cautious estimate until a doctor sets your timeline'
+  if (est.moderate?.minDays) return { minDays: est.moderate.minDays, maxDays: est.moderate.maxDays, label }
+  if (est.mild?.minDays) return { minDays: est.mild.minDays * 2, maxDays: est.mild.maxDays * 2, label }
+  return null
+}
+
 // Who to see, based on how serious the answers were and what the notes mention.
 export function recommendation(outcome) {
   const text = (outcome.notes ?? []).join(' ').toLowerCase()
