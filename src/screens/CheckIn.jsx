@@ -3,9 +3,11 @@ import { haptic } from '../logic/feedback'
 import { Screen, Choice } from '../components/Screen'
 import { rules, addDays, formatDate } from '../logic/triage'
 import { checkInQuestions, recovery } from '../logic/recovery'
+import { strengthInfo } from '../logic/journey'
+import { dayNumber } from '../logic/plan'
 
-export function CheckIn({ partId, onBack, onSubmit }) {
-  const questions = checkInQuestions(partId)
+export function CheckIn({ partId, severity, recovered, onBack, onSubmit }) {
+  const questions = checkInQuestions(partId, { severity, recovered })
   const [flagged, setFlagged] = useState(null)
   const [answers, setAnswers] = useState({ pain: 3 })
   const [touchedPain, setTouchedPain] = useState(false)
@@ -16,7 +18,7 @@ export function CheckIn({ partId, onBack, onSubmit }) {
     <Screen
       onBack={onBack}
       title="Daily check-in"
-      subtitle={`About 30 seconds. These questions are just for your ${rules.injuries[partId].name.toLowerCase()}.`}
+      subtitle={recovered ? `Strength check. Quick tests to see how strong your ${rules.injuries[partId].name.toLowerCase()} is getting.` : `About 30 seconds. These questions are just for your ${rules.injuries[partId].name.toLowerCase()}.`}
       footer={
         <button className="btn primary" disabled={!done} onClick={() => onSubmit({ answers, flagged })}>
           Save check-in
@@ -64,20 +66,32 @@ export function CheckIn({ partId, onBack, onSubmit }) {
 
 const TONE = { see_care_today: 'alert', see_trainer: 'caution', plan: 'good' }
 
-export function CheckInResult({ injury, onDone, onFindCare }) {
+export function CheckInResult({ injury, onDone, onFindCare, onReinjury }) {
   const { plan } = injury
   const r = plan.lastResult
   const newDate = formatDate(addDays(injury.date, plan.projected))
-  const needsCare = r.action !== 'plan' || r.overdue || r.painHigh
+  const needsCare = r.action !== 'plan' || r.overdue || (r.painHigh && !r.strength)
   const improved = r.action === 'plan' && r.shrunk > 0
   useEffect(() => {
     if (improved) haptic([30, 50, 30])
   }, [improved])
 
+  const strong = r.strength ? strengthInfo(plan, dayNumber(injury)) : null
+
   let badge = 'Check-in saved'
   let title = 'Keep going'
   let copy = 'Stick with today\'s plan. Your date updates every time you check in.'
-  if (r.action === 'see_care_today') {
+  if (r.strength && r.action === 'plan') {
+    if (r.painHigh) {
+      badge = 'Pain is back'
+      title = 'Ease off today'
+      copy = 'Pain after recovering can mean you pushed too hard or it got hurt again. Rest it. If it keeps hurting, tell us and we will rebuild your plan.'
+    } else {
+      badge = 'Strength logged'
+      title = `${strong.current.emoji} Strong work, ${strong.current.name}`
+      copy = strong.next ? `${strong.daysToNext} more strength day${strong.daysToNext === 1 ? '' : 's'} to reach ${strong.next.emoji} ${strong.next.name}.` : 'You are a gorilla. Keep training to stay here.'
+    }
+  } else if (r.action === 'see_care_today') {
     badge = 'Stop and get help'
     title = rules.actions.see_care_today.title
     copy = 'New numbness, tingling, or a sudden jump in pain or swelling needs a real check today. Pause your exercises.'
@@ -99,12 +113,13 @@ export function CheckInResult({ injury, onDone, onFindCare }) {
     <Screen
       footer={
         <>
+          {r.strength && r.painHigh && r.action === 'plan' && <button className="btn primary" onClick={() => onReinjury('after')}>I hurt it again</button>}
           {needsCare && <button className="btn primary" onClick={onFindCare}>Find care near me</button>}
           <button className={`btn ${needsCare ? 'ghost' : 'primary'}`} onClick={onDone}>Back to my plan</button>
         </>
       }
     >
-      <div className={`result ${TONE[r.action]}`}>
+      <div className={`result ${r.strength && r.painHigh && r.action === 'plan' ? 'caution' : TONE[r.action]}`}>
         <span className="result-badge">{badge}</span>
         <h1 className="result-title">{title}</h1>
         <p className="result-copy">{copy}</p>
@@ -112,7 +127,7 @@ export function CheckInResult({ injury, onDone, onFindCare }) {
       {r.overdue && r.action === 'plan' && (
         <div className="card note"><p>This is taking longer than the plan expected. Have a doctor take a look.</p></div>
       )}
-      {r.painHigh && r.action === 'plan' && (
+      {r.painHigh && !r.strength && r.action === 'plan' && (
         <div className="card note"><p>Your pain is high today. If it stays this high or gets worse, get it checked.</p></div>
       )}
     </Screen>

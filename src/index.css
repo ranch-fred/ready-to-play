@@ -1027,3 +1027,33 @@ body::before {
 }
 @keyframes care-pop { from { opacity: 0; transform: translateY(24px) scale(0.92); } }
 @keyframes care-fade { from { opacity: 0; } }
+
+/* Strength journey: emoji path nodes, animal orb, tier row */
+.path-node.emoji { font-size: 34px; line-height: 1; display: grid; place-items: center; padding: 0; font-family: inherit; }
+.path-node.emoji.done { background: rgba(46, 230, 122, 0.22); box-shadow: 0 0 0 3px var(--accent-2), 0 6px 0 rgba(0, 0, 0, 0.45); }
+.path-node.emoji.now { background: var(--accent); }
+.path-node.emoji.locked span { filter: grayscale(1); opacity: 0.45; }
+.orb.strength { gap: 0; }
+.orb-emoji { font-size: 88px; line-height: 1; filter: drop-shadow(0 6px 10px rgba(0, 40, 15, 0.35)); }
+.orb.strength .orb-unit { font-size: 20px; margin-top: 2px; }
+.orb.strength .orb-clock { font-size: 13px; letter-spacing: 0.14em; margin-top: 2px; }
+.tier-row { display: flex; justify-content: center; flex-wrap: wrap; gap: 6px; margin-top: 12px; font-size: 22px; }
+.tier-row span { opacity: 0.3; filter: grayscale(1); transition: opacity 0.4s ease, transform 0.5s var(--spring); }
+.tier-row span.done { opacity: 0.75; filter: none; }
+.tier-row span.now { opacity: 1; filter: none; transform: scale(1.35); }
+.demo-tools .row { display: flex; gap: 10px; }
+.demo-tools .row .btn { flex: 1; }
+
+/* Tools tab: re-hurt cards and the slim doctor row */
+.rehurt { display: grid; gap: 10px; }
+.rehurt-card { display: flex; align-items: center; gap: 14px; width: 100%; padding: 14px 16px; text-align: left; font: inherit; color: #fff; cursor: pointer; border-radius: 18px 6px 18px 6px; border: 1px solid rgba(255, 176, 32, 0.45); background: linear-gradient(160deg, rgba(255, 176, 32, 0.12), rgba(255, 255, 255, 0.02)); }
+.rehurt-emoji { font-size: 30px; line-height: 1; }
+.rehurt-text { flex: 1; display: grid; gap: 2px; }
+.rehurt-text b { font-size: 16px; }
+.rehurt-text span { color: var(--muted); font-size: 13px; }
+.doctor-row { display: flex; align-items: center; gap: 10px; margin: 18px 0 4px; padding: 12px 14px; border-radius: 14px; border: 1px dashed rgba(255, 255, 255, 0.2); color: var(--muted); text-decoration: none; font-weight: 600; font-size: 14px; }
+.doctor-row span { flex: 1; }
+@media (prefers-reduced-motion: no-preference) {
+  .orb-emoji { display: inline-block; animation: pop-in 0.7s var(--pop) backwards; }
+  .tier-row span.now { animation: pop-in 0.6s var(--pop) backwards; }
+}

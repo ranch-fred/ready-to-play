@@ -1,5 +1,6 @@
 import { lazy, Suspense, useState } from 'react'
 import { healProgress, painSeries } from '../logic/recovery'
+import { isRecovered } from '../logic/journey'
 
 const HealingModel3D = lazy(() => import('./HealingModel3D'))
 
@@ -79,7 +80,7 @@ function Trend({ series }) {
 
 export function RecoveryCard({ injury, plan, day }) {
   const [noModel, setNoModel] = useState(false)
-  const heal = healProgress(plan, day)
+  const heal = isRecovered(plan, day) ? 1 : healProgress(plan, day)
   const pct = Math.round(heal * 100)
   const series = painSeries(plan)
   const lastPain = series.length ? series[series.length - 1].pain : null

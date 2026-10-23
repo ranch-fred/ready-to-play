@@ -105,6 +105,36 @@ export const EXERCISES = {
     anchor: 'ball',
     motion: swing({ from: { ankle: {}, toes: {} }, to: { ankle: { flex: -34 }, toes: { flex: 34 } }, out: 1.1, hold: 0.6, back: 1.5, cueOut: 'Rise up onto your toes', holdCue: 'Hold at the top', cueBack: 'Lower down slowly' }),
   },
+  calf_raises_single: {
+    name: 'Single-leg calf raises',
+    setup: 'Stand on the hurt foot with one hand on a wall. Go slow.',
+    why: 'Builds the calf and ankle strength that running and jumping depend on.',
+    reps: 10,
+    floor: true,
+    view: ANKLE_SIDE,
+    trail: 'heel',
+    anchor: 'ball',
+    motion: swing({ from: { ankle: {}, toes: {} }, to: { ankle: { flex: -36 }, toes: { flex: 36 } }, out: 1.3, hold: 0.8, back: 1.9, cueOut: 'Rise all the way up on one foot', holdCue: 'Hold at the top', cueBack: 'Lower slowly, no dropping' }),
+  },
+  single_leg_jumps: {
+    name: 'Single-leg jumps',
+    setup: 'Jump up and land on the same foot. Land softly and stay balanced.',
+    why: 'Trains the ankle to explode and absorb a landing, like in a real game.',
+    reps: 10,
+    floor: true,
+    view: ANKLE_SIDE,
+    trail: 'heel',
+    anchor: 'ball',
+    motion: {
+      keys: [
+        { pose: { ankle: { flex: 6 }, toes: {} }, lift: 0, move: 0.25, cue: 'Load up, bend a little', ease: 'out' },
+        { pose: { ankle: { flex: -38 }, toes: { flex: 38 } }, lift: 0.8, move: 0.2, cue: 'Explode up', ease: 'out' },
+        { pose: { ankle: { flex: -22 }, toes: { flex: 8 } }, lift: 1.7, move: 0.2, cue: 'Up', ease: 'out' },
+        { pose: { ankle: { flex: -10 }, toes: { flex: 12 } }, lift: 0.3, move: 0.25, cue: 'Land softly on the ball of your foot' },
+        { pose: { ankle: { flex: 6 }, toes: {} }, lift: 0, move: 0.2, hold: 0.3, cue: 'Stick the landing' },
+      ],
+    },
+  },
   toe_raises: {
     name: 'Toe raises',
     setup: 'Stand with your back near a wall.',
@@ -579,6 +609,7 @@ export const PROGRAM = {
     strength: ['calf_raises', 'band_out', 'toe_raises', 'balance'],
     sport: ['calf_raises', 'hops', 'side_hops', 'balance'],
     return: ['ankle_circles', 'calf_raises', 'hops', 'side_hops'],
+    strong: ['calf_raises_single', 'single_leg_jumps', 'side_hops', 'balance'],
   },
   wrist: {
     protect: ['fist_open', 'wrist_bends_gentle', 'wrist_side_gentle', 'palm_flips_gentle'],
@@ -586,6 +617,7 @@ export const PROGRAM = {
     strength: ['grip_squeeze', 'wrist_curls', 'reverse_curls', 'bottle_twists'],
     sport: ['wrist_circles', 'quick_flicks', 'catch_squeeze', 'grip_squeeze'],
     return: ['wrist_circles', 'quick_flicks', 'catch_squeeze', 'grip_squeeze'],
+    strong: ['grip_squeeze', 'wrist_curls', 'reverse_curls', 'catch_squeeze'],
   },
   shoulder: {
     protect: ['pendulum', 'pendulum_sway', 'elbow_bends', 'table_slides'],
@@ -593,6 +625,7 @@ export const PROGRAM = {
     strength: ['wall_slides', 'outward_rotation', 'rows', 'side_raise'],
     sport: ['arm_circles', 'overhead_reach', 'outward_rotation', 'throw_motion'],
     return: ['arm_circles', 'overhead_reach', 'rows', 'throw_motion'],
+    strong: ['rows', 'side_raise', 'outward_rotation', 'throw_motion'],
   },
   hamstring: {
     protect: ['heel_slides', 'hamstring_squeeze', 'gentle_knee_bends'],
@@ -600,6 +633,7 @@ export const PROGRAM = {
     strength: ['standing_curls', 'kick_backs', 'curl_hold', 'leg_raise_stretch'],
     sport: ['leg_swings', 'high_knees', 'butt_kicks', 'standing_curls'],
     return: ['leg_swings', 'high_knees', 'butt_kicks', 'kick_backs'],
+    strong: ['standing_curls', 'kick_backs', 'high_knees', 'leg_swings'],
   },
 }
 

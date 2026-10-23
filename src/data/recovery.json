@@ -255,5 +255,87 @@
         "when": "Not getting better after a week, or it keeps getting hurt again."
       }
     ]
+  },
+  "performance": {
+    "ankle": [
+      {
+        "id": "calf",
+        "question": "Single-leg calf raises on the hurt foot: how many can you do?",
+        "options": [
+          "10 or more",
+          "3 to 9",
+          "Can't do one"
+        ]
+      },
+      {
+        "id": "hop",
+        "question": "Try small single-leg hops in place. How do they feel?",
+        "options": [
+          "Easy, no pain",
+          "Doable, a little sore",
+          "Can't hop"
+        ]
+      }
+    ],
+    "wrist": [
+      {
+        "id": "plank",
+        "question": "Hold a push-up position on your hands for 20 seconds?",
+        "options": [
+          "Yes, no pain",
+          "Yes, a little sore",
+          "No"
+        ]
+      },
+      {
+        "id": "curl",
+        "question": "Wrist curls with a 2 lb weight: how many can you do?",
+        "options": [
+          "10 or more",
+          "3 to 9",
+          "Can't do one"
+        ]
+      }
+    ],
+    "shoulder": [
+      {
+        "id": "pushup",
+        "question": "Try 10 slow wall push-ups. How do they feel?",
+        "options": [
+          "Easy, no pain",
+          "Doable, a little sore",
+          "Can't do them"
+        ]
+      },
+      {
+        "id": "lift",
+        "question": "Side raises with a 3 lb weight: how many can you do?",
+        "options": [
+          "10 or more",
+          "3 to 9",
+          "Can't do one"
+        ]
+      }
+    ],
+    "hamstring": [
+      {
+        "id": "bridge",
+        "question": "Single-leg glute bridges on the hurt leg: how many can you do?",
+        "options": [
+          "10 or more",
+          "3 to 9",
+          "Can't do one"
+        ]
+      },
+      {
+        "id": "knees",
+        "question": "High knees in place for 20 seconds?",
+        "options": [
+          "Easy",
+          "Tight, a little sore",
+          "Can't"
+        ]
+      }
+    ]
   }
 }

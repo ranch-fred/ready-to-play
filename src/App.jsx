@@ -11,9 +11,10 @@ import { Care } from './screens/Care'
 import { Loading } from './screens/Loading'
 import { Session } from './screens/Session'
 import { todayPlan, dayNumber } from './logic/plan'
+import { isRecovered } from './logic/journey'
 import { startPlan, applyCheckIn } from './logic/recovery'
 
-const FRESH = { screen: 'intro', partId: null, side: null, locations: [], flagIndex: 0, testIndex: 0, tests: {}, outcome: null, stops: [] }
+const FRESH = { screen: 'intro', partId: null, side: null, locations: [], flagIndex: 0, testIndex: 0, tests: {}, outcome: null, stops: [], reinjury: null }
 
 export default function App() {
   const [saved, setSaved] = useState(() => loadState())
@@ -42,6 +43,15 @@ export default function App() {
   const restart = () => {
     setHistory([])
     setState(FRESH)
+  }
+  // "I hurt it again": ask the injury questions again for the same body part and side, then rebuild the plan.
+  const reinjure = (kind) => {
+    const inj = saved?.injury
+    if (!inj) return
+    const msg = kind === 'after' ? 'Hurt it again after recovering? We will ask a few quick questions and build a new plan.' : 'Pain came back during recovery? We will ask a few quick questions and rebuild your plan.'
+    if (!window.confirm(msg)) return
+    setHistory([])
+    jump({ ...FRESH, screen: 'location', partId: inj.partId, side: inj.side, reinjury: kind })
   }
   const finish = (outcome) => go({ screen: 'result', outcome })
   const saveInjury = (injury) => {
@@ -170,6 +180,7 @@ export default function App() {
                 plan: startPlan(partId, state.outcome.estimate),
                 care: state.outcome.care ?? null,
                 careSeen: false,
+                reinjuries: state.reinjury ? (saved?.injury?.reinjuries ?? 0) + 1 : 0,
               },
             }
             saveState(next)
@@ -213,6 +224,7 @@ export default function App() {
           profile={saved.profile}
           injury={saved.injury}
           onUpdateInjury={saveInjury}
+          onReinjury={reinjure}
           onStartSession={() => go({ screen: 'session', homeTab: 'today' })}
           onCheckIn={(day) => go({ screen: 'checkin', day })}
           onNewInjury={() => {
@@ -228,14 +240,19 @@ export default function App() {
       return (
         <CheckIn
           partId={injury.partId}
+          severity={injury.outcome.severity}
+          recovered={isRecovered(injury.plan ?? startPlan(injury.partId, injury.outcome.estimate), state.day)}
           onBack={back}
           onSubmit={({ answers, flagged }) => {
-            const plan = applyCheckIn(injury.plan ?? startPlan(injury.partId, injury.outcome.estimate), {
+            const current = injury.plan ?? startPlan(injury.partId, injury.outcome.estimate)
+            const plan = applyCheckIn(current, {
               partId: injury.partId,
               day: state.day,
               answers,
               flagged,
               minDays: injury.outcome.estimate.minDays,
+              severity: injury.outcome.severity,
+              recovered: isRecovered(current, state.day),
             })
             saveInjury({ ...injury, plan })
             setHistory([])
@@ -251,6 +268,7 @@ export default function App() {
           injury={saved.injury}
           onDone={() => jump({ ...FRESH, screen: 'home', homeTab: 'today' })}
           onFindCare={() => go({ screen: 'care' })}
+          onReinjury={reinjure}
         />
       )
 

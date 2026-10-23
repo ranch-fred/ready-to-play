@@ -1,5 +1,6 @@
 import { rules, addDays, daysBetween } from './triage'
-import { checkInQuestions } from './recovery'
+import { allCheckInQuestions } from './recovery'
+import { isRecovered, strengthInfo, TIER_DAYS } from './journey'
 import { PROGRAM, exercise } from '../data/exercises'
 
 // Today's stage comes from how the athlete answered their latest check-in, not just the calendar.
@@ -16,7 +17,7 @@ const STAGE = { protect: 0, motion: 1, strength: 2, sport: 3, return: 4 }
 
 // Option position for an answer: 0 = best, 1 = middle, 2 = worst.
 function level(partId, answers, id) {
-  const q = checkInQuestions(partId).find((x) => x.id === id)
+  const q = allCheckInQuestions(partId).find((x) => x.id === id)
   if (!q || answers?.[id] === undefined) return 0
   return Math.max(0, q.options.indexOf(answers[id]))
 }
@@ -98,6 +99,14 @@ const LABELS = {
   bend: 'Bending the wrist',
   grip: 'Grip',
   weight: 'Weight on the hand',
+  calf: 'Calf raises',
+  hop: 'Hopping',
+  plank: 'Push-up hold',
+  curl: 'Wrist curls',
+  pushup: 'Wall push-ups',
+  lift: 'Side raises',
+  bridge: 'Glute bridges',
+  knees: 'High knees',
 }
 
 // The answers that changed the most between two check-ins, in words (biggest first, at most two).
@@ -105,7 +114,7 @@ const LABELS = {
 function biggestChanges(partId, before, after) {
   if (!before || !after) return []
   const out = []
-  for (const q of checkInQuestions(partId)) {
+  for (const q of allCheckInQuestions(partId)) {
     if (q.type === 'scale') {
       const d = Math.abs((before.pain ?? 0) - (after.pain ?? 0))
       if (d >= 2) out.push({ size: d / 4, text: `Pain ${before.pain} → ${after.pain}` })
@@ -125,6 +134,29 @@ export function todayPlan(injury, day) {
   const checks = plan.checkIns ?? []
   const last = checks[checks.length - 1]
   const prev = checks[checks.length - 2]
+
+  // Fully recovered: the daily plan turns into strength training, and it gets bigger as the animal level goes up.
+  if (isRecovered(plan, day)) {
+    const info = strengthInfo(plan, day)
+    const rounds = ROUNDS + (info.tier >= 3 ? 1 : 0) + (info.tier >= 6 ? 1 : 0)
+    return {
+      stage: 5,
+      stageInfo: { id: 'strong', name: `${info.current.emoji} ${info.current.name} strength`, blurb: info.current.focus },
+      strong: info,
+      previous: null,
+      moved: 0,
+      changes: [],
+      held: false,
+      unlockDate: null,
+      pain: last?.answers.pain,
+      easy: false,
+      checkedToday: checks.some((c) => c.day === day),
+      exercises: PROGRAM[partId].strong.map((id) => ({ ...exercise(id), range: 1, duration: WORK_SECONDS })),
+      rounds,
+      lastAnswers: last?.answers ?? null,
+      doneToday: plan.sessions?.[day] ?? null,
+    }
+  }
 
   const raw = last ? stageFromAnswers(partId, last.answers) : startingStage(outcome)
   const { stage, held, unlockDay } = gate(raw, day, outcome.estimate, plan.projected)
@@ -153,6 +185,8 @@ export function todayPlan(injury, day) {
     doneToday: plan.sessions?.[day] ?? null,
   }
 }
+
+export { TIER_DAYS }
 
 export function dayNumber(injury, now = new Date()) {
   return daysBetween(injury.date, now) + 1 + (injury.dayOffset || 0)

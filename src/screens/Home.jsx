@@ -6,6 +6,7 @@ import { todayPlan, dayNumber, STAGES, ROUNDS, WORK_SECONDS, BREAK_SECONDS, stag
 import { EXERCISES, PROGRAM } from '../data/exercises'
 import { CareView } from './Care'
 import { CarePopup } from '../components/CarePopup'
+import { isRecovered, strengthInfo, TIERS, TIER_DAYS, STAGE_EMOJI } from '../logic/journey'
 
 const STATUS = {
   plan: { label: 'Recovering', tone: 'good' },
@@ -13,14 +14,13 @@ const STATUS = {
   see_care_today: { label: 'See care today', tone: 'alert' },
 }
 
-const DEMO = typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('demo')
 const DAY_MS = 86400000
 
 const TABS = [
   { id: 'home', label: 'Home', icon: 'M3 11l9-8 9 8v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z' },
   { id: 'today', label: 'Today', icon: 'M6.5 6.5v11M17.5 6.5v11M3.5 9v6M20.5 9v6M6.5 12h11' },
   { id: 'map', label: 'Map', icon: 'M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11zM12 12.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5z' },
-  { id: 'care', label: 'Care', icon: 'M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10zM12 9v5M9.5 11.5h5' },
+  { id: 'care', label: 'Tools', icon: 'M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.6 2.6-2.4-.6-.6-2.4z' },
 ]
 
 function useNow() {
@@ -30,6 +30,36 @@ function useNow() {
     return () => clearInterval(t)
   }, [])
   return now
+}
+
+// After recovery the countdown turns into the strength level: a big animal and a ring that fills toward the next one.
+function StrengthOrb({ info }) {
+  return (
+    <div className="orb-wrap">
+      <div className="dial" aria-hidden="true">
+        <span className="dial-ticks" />
+        <span className="dial-arc" style={{ '--p': info.progress }} />
+      </div>
+      <div className="orb strength" role="img" aria-label={`Strength level ${info.tier + 1}: ${info.current.name}`}>
+        <span className="orb-emoji">{info.current.emoji}</span>
+        <span className="orb-unit">{info.current.name}</span>
+        <span className="orb-clock">LEVEL {info.tier + 1}{info.top ? ' · TOP' : ''}</span>
+      </div>
+      <p className="orb-caption">
+        {info.next ? `${info.daysToNext} strength day${info.daysToNext === 1 ? '' : 's'} to ${info.next.emoji} ${info.next.name}` : 'Top of the food chain. Stay here.'}
+      </p>
+    </div>
+  )
+}
+
+function TierRow({ tier }) {
+  return (
+    <div className="tier-row" aria-hidden="true">
+      {TIERS.map((t, i) => (
+        <span key={t.id} className={i < tier ? 'done' : i === tier ? 'now' : ''}>{t.emoji}</span>
+      ))}
+    </div>
+  )
 }
 
 function Orb({ target, offsetDays, heal }) {
@@ -56,35 +86,40 @@ function Orb({ target, offsetDays, heal }) {
   )
 }
 
-export function Home({ profile, injury, onNewInjury, onCheckIn, onUpdateInjury, onStartSession, startTab = 'home' }) {
+export function Home({ profile, injury, onNewInjury, onCheckIn, onUpdateInjury, onStartSession, onReinjury, startTab = 'home' }) {
   const [tab, setTab] = useState(startTab)
+  const [doctorFirst, setDoctorFirst] = useState(false)
+  const openTools = (doctor) => {
+    setDoctorFirst(!!doctor)
+    setTab('care')
+    window.scrollTo(0, 0)
+  }
   const { care } = injury
   const [showCare, setShowCare] = useState(() => !!care && !injury.careSeen)
   const closeCare = (toCareTab) => {
     setShowCare(false)
     if (!injury.careSeen) onUpdateInjury({ ...injury, careSeen: true })
-    if (toCareTab) {
-      setTab('care')
-      window.scrollTo(0, 0)
-    }
+    if (toCareTab) openTools(true)
   }
   const { outcome } = injury
   const part = rules.injuries[injury.partId]
   const spotIds = injury.locationIds ?? (injury.locationId ? [injury.locationId] : [])
   const spots = part?.locations.filter((l) => spotIds.includes(l.id)).map((l) => l.label) ?? []
-  const status = STATUS[outcome.action] || STATUS.see_trainer
   const offset = injury.dayOffset || 0
-  const [day] = useState(() => dayNumber(injury))
+  const day = dayNumber(injury)
   const title = part
     ? `${injury.side ? injury.side[0].toUpperCase() + injury.side.slice(1) + ' ' : ''}${part.name.toLowerCase()}`
     : 'Injury'
 
   // Plans saved before daily check-ins existed get one here.
   const plan = outcome.estimate ? injury.plan ?? startPlan(injury.partId, outcome.estimate) : null
+  const recovered = plan ? isRecovered(plan, day) : false
+  const strong = recovered ? strengthInfo(plan, day) : null
+  const status = recovered ? { label: `${strong.current.emoji} ${strong.current.name}`, tone: 'good' } : STATUS[outcome.action] || STATUS.see_trainer
   const checkedToday = plan?.checkIns.some((c) => c.day === day)
   const last = plan?.lastResult
   const today = plan ? todayPlan({ ...injury, plan }, day) : null
-  const phase = today ? { ...phaseRanges(injury.partId, plan.projected)[today.stage], index: today.stage, count: STAGES.length } : null
+  const phase = today && !recovered ? { ...phaseRanges(injury.partId, plan.projected)[today.stage], index: today.stage, count: STAGES.length } : null
   const walkQ = recovery.checkIns[injury.partId]?.find((q) => q.id === 'walk')
   const cantWalk = !!walkQ && today?.lastAnswers?.walk === walkQ.options[2]
   const backDate = plan ? addDays(new Date(injury.date).setHours(0, 0, 0, 0), plan.projected) : null
@@ -116,17 +151,31 @@ export function Home({ profile, injury, onNewInjury, onCheckIn, onUpdateInjury, 
 
           {plan ? (
             <>
-              <Orb target={backDate.getTime()} offsetDays={offset} heal={healProgress(plan, day)} />
-              <div className="card center">
-                <p className="eyebrow">Our best guess</p>
-                <p className="big-date">{formatDate(backDate)}</p>
-                {plan.projected < plan.padded && (
-                  <p className="was">First guess: {formatDate(addDays(new Date(injury.date).setHours(0, 0, 0, 0), plan.padded))}</p>
-                )}
-                <p className="muted">
-                  {outcome.estimate.label}. This guess includes a 25% safety cushion, so good check-ins make it shorter.
-                </p>
-              </div>
+              {recovered ? (
+                <>
+                  <StrengthOrb info={strong} />
+                  <div className="card center">
+                    <p className="eyebrow">Fully recovered 🎉</p>
+                    <p className="big-date">{strong.current.emoji} {strong.current.name}</p>
+                    <p className="muted">{strong.current.focus}</p>
+                    <TierRow tier={strong.tier} />
+                  </div>
+                </>
+              ) : (
+                <>
+                  <Orb target={backDate.getTime()} offsetDays={offset} heal={healProgress(plan, day)} />
+                  <div className="card center">
+                    <p className="eyebrow">Our best guess</p>
+                    <p className="big-date">{formatDate(backDate)}</p>
+                    {plan.projected < plan.padded && (
+                      <p className="was">First guess: {formatDate(addDays(new Date(injury.date).setHours(0, 0, 0, 0), plan.padded))}</p>
+                    )}
+                    <p className="muted">
+                      {outcome.estimate.label}. This guess includes a 25% safety cushion, so good check-ins make it shorter.
+                    </p>
+                  </div>
+                </>
+              )}
 
               {!checkedToday ? (
                 <>
@@ -158,8 +207,17 @@ export function Home({ profile, injury, onNewInjury, onCheckIn, onUpdateInjury, 
               )}
 
               <button className="card phase-peek" onClick={() => setTab('map')}>
-                <p className="eyebrow">Stage {phase.index + 1} of {phase.count}</p>
-                <p className="card-title">{phase.name}</p>
+                {recovered ? (
+                  <>
+                    <p className="eyebrow">Strength level {strong.tier + 1}{strong.top ? ' · top level' : ''}</p>
+                    <p className="card-title">{strong.current.emoji} {strong.current.name}</p>
+                  </>
+                ) : (
+                  <>
+                    <p className="eyebrow">Stage {phase.index + 1} of {phase.count}</p>
+                    <p className="card-title">{STAGE_EMOJI[phase.id]} {phase.name}</p>
+                  </>
+                )}
                 <p className="go">See your path →</p>
               </button>
             </>
@@ -174,15 +232,23 @@ export function Home({ profile, injury, onNewInjury, onCheckIn, onUpdateInjury, 
             </div>
           )}
 
-          <button className="btn ghost" onClick={() => setTab('care')}>Find care</button>
+          <button className="btn ghost" onClick={() => openTools(true)}>Find a doctor</button>
           <button className="btn ghost" onClick={onNewInjury}>Report a new injury</button>
 
-          {DEMO && plan && (
+          {plan && (
             <div className="card demo-tools">
-              <p className="eyebrow">Demo tools</p>
-              <button className="btn ghost" onClick={() => onUpdateInjury({ ...injury, plan, dayOffset: offset + 1 })}>
-                Skip to next day
-              </button>
+              <p className="eyebrow">Presenter tools · Day {day}</p>
+              <div className="row">
+                <button className="btn ghost" onClick={() => onUpdateInjury({ ...injury, plan, dayOffset: offset + 1 })}>
+                  Next day
+                </button>
+                <button className="btn ghost" onClick={() => onUpdateInjury({ ...injury, plan, dayOffset: offset + 7 })}>
+                  +1 week
+                </button>
+              </div>
+              {offset > 0 && (
+                <button className="link-btn" onClick={() => onUpdateInjury({ ...injury, plan, dayOffset: 0 })}>Back to today</button>
+              )}
             </div>
           )}
         </>
@@ -194,8 +260,17 @@ export function Home({ profile, injury, onNewInjury, onCheckIn, onUpdateInjury, 
 
       {tab === 'care' && (
         <>
-          <h1 className="title">Care</h1>
-          <CareView partId={injury.partId} outcome={care ? { ...outcome, action: care.action } : outcome} lastResult={plan?.lastResult} stage={today?.stage ?? 0} cantWalk={cantWalk} town={profile?.town} />
+          <h1 className="title">Tools</h1>
+          <CareView
+            partId={injury.partId}
+            outcome={care ? { ...outcome, action: care.action } : outcome}
+            lastResult={recovered ? null : plan?.lastResult}
+            stage={today?.stage ?? 0}
+            cantWalk={cantWalk}
+            town={profile?.town}
+            doctorFirst={doctorFirst}
+            onReinjury={onReinjury}
+          />
         </>
       )}
 
@@ -203,7 +278,7 @@ export function Home({ profile, injury, onNewInjury, onCheckIn, onUpdateInjury, 
         <>
           <h1 className="title">Your path</h1>
           {plan ? (
-            <PathMap partId={injury.partId} total={plan.projected} current={phase.index} startDate={injury.date} answers={today?.lastAnswers} today={today} />
+            <PathMap partId={injury.partId} total={plan.projected} current={recovered ? null : phase.index} strong={strong} startDate={injury.date} answers={today?.lastAnswers} today={today} />
           ) : (
             <div className="card empty"><p>Your path appears once your plan starts.</p></div>
           )}
@@ -216,7 +291,7 @@ export function Home({ profile, injury, onNewInjury, onCheckIn, onUpdateInjury, 
       <nav className="tabbar" aria-label="Sections" style={{ '--tab': Math.max(0, TABS.findIndex((t) => t.id === tab)) }}>
         <span className="tab-pill" aria-hidden="true" />
         {TABS.map((t) => (
-          <button key={t.id} className={tab === t.id ? 'on' : ''} aria-current={tab === t.id ? 'page' : undefined} onClick={() => { setTab(t.id); window.scrollTo(0, 0) }}>
+          <button key={t.id} className={tab === t.id ? 'on' : ''} aria-current={tab === t.id ? 'page' : undefined} onClick={() => { setDoctorFirst(false); setTab(t.id); window.scrollTo(0, 0) }}>
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={t.icon} /></svg>
             <span>{t.label}</span>
           </button>
@@ -236,7 +311,8 @@ function TodayTab({ today, checkedToday, onCheckIn, onStart }) {
     )
   }
   const { moved, stageInfo, exercises } = today
-  const minutes = Math.round((exercises.length * (ROUNDS * WORK_SECONDS + (ROUNDS - 1) * BREAK_SECONDS + 12)) / 60)
+  const rounds = today.rounds ?? ROUNDS
+  const minutes = Math.round((exercises.length * (rounds * WORK_SECONDS + (rounds - 1) * BREAK_SECONDS + 12)) / 60)
 
   return (
     <>
@@ -247,8 +323,9 @@ function TodayTab({ today, checkedToday, onCheckIn, onStart }) {
         {moved < 0 && <span className="move-tag down">↓ Easier today</span>}
       </div>
 
-      <div className="rhythm" aria-label="Each exercise: 3 rounds of 30 seconds with 5 second breaks">
-        <div><b>3</b><span>rounds</span></div>
+      {today.strong && <p className="muted center tight">{stageInfo.blurb}</p>}
+      <div className="rhythm" aria-label={`Each exercise: ${today.rounds} rounds of 30 seconds with 5 second breaks`}>
+        <div><b>{today.rounds}</b><span>rounds</span></div>
         <div><b>30s</b><span>on</span></div>
         <div><b>5s</b><span>break</span></div>
       </div>
@@ -367,24 +444,31 @@ function Goals({ goals }) {
   )
 }
 
-function PathMap({ partId, total, current, startDate, answers, today }) {
+// The whole journey: five recovery stages, then eight strength levels from mouse to gorilla. The gorilla level never ends.
+function PathMap({ partId, total, current, strong, startDate, answers, today }) {
   const stages = phaseRanges(partId, total)
+  const recoveredNow = current === null
   const [open, setOpen] = useState(-1)
   const start = new Date(startDate).setHours(0, 0, 0, 0)
   const OFFSETS = [0, 60, 0, -60, 0]
   const containerRef = useRef(null)
-  const next = current + 1 < stages.length ? current + 1 : null
+  const here = recoveredNow ? stages.length + strong.tier : current
+  const nodes = [
+    ...stages.map((s) => ({ key: s.id, emoji: STAGE_EMOJI[s.id], name: s.name, when: s.id === 'return' ? addDays(start, total) : addDays(start, Math.max(s.startDay - 1, 0)), stage: s })),
+    ...TIERS.map((t, i) => ({ key: t.id, emoji: t.emoji, name: i === TIERS.length - 1 ? `${t.name} · top level` : t.name, when: addDays(start, total + i * TIER_DAYS), tier: t, tierIndex: i })),
+  ]
+  const nextStage = !recoveredNow && current + 1 < stages.length ? current + 1 : null
   const returnGoals = [{ label: 'Reach your return date', done: false }, { label: 'A doctor clears you to play', done: false }]
   const goalsFor = (i) => (i === stages.length - 1 ? returnGoals : stageGoals(partId, i, answers))
-  const nextGoals = next !== null ? goalsFor(next) : []
+  const nextGoals = nextStage !== null ? goalsFor(nextStage) : []
   const doneCount = nextGoals.filter((g) => g.done).length
 
   return (
     <>
-      {next !== null && (
+      {nextStage !== null && (
         <div className="card next-goal">
           <div className="next-head">
-            <p className="eyebrow">To unlock {stages[next].name}</p>
+            <p className="eyebrow">To unlock {STAGE_EMOJI[stages[nextStage].id]} {stages[nextStage].name}</p>
             <span className="goal-count">{doneCount}/{nextGoals.length}</span>
           </div>
           <Goals goals={nextGoals} />
@@ -392,38 +476,68 @@ function PathMap({ partId, total, current, startDate, answers, today }) {
           {!answers && <p className="muted">Do a check-in to see your progress.</p>}
         </div>
       )}
+      {recoveredNow && (
+        <div className="card next-goal">
+          <div className="next-head">
+            <p className="eyebrow">{strong.next ? `Next: ${strong.next.emoji} ${strong.next.name}` : `${strong.current.emoji} You made it to the top`}</p>
+            {strong.next && <span className="goal-count">{strong.daysToNext}d</span>}
+          </div>
+          <p className="muted">
+            {strong.next
+              ? `Do your strength session each day. A new animal unlocks every ${TIER_DAYS} days.`
+              : 'There is no finish line. Stay a gorilla by keeping up your daily training.'}
+          </p>
+        </div>
+      )}
       <div className="path" ref={containerRef}>
-        <Footsteps containerRef={containerRef} current={current} deps={[open, stages.length]} />
-        {stages.map((s, i) => {
-          const state = i < current ? 'done' : i === current ? 'now' : 'locked'
-          const last = i === stages.length - 1
+        <Footsteps containerRef={containerRef} current={here} deps={[open, nodes.length]} />
+        {nodes.map((n, i) => {
+          const state = i < here ? 'done' : i === here ? 'now' : 'locked'
+          const lastNode = i === nodes.length - 1
           return (
-            <div key={s.id} className="path-stop" style={{ '--x': `${OFFSETS[i % OFFSETS.length]}px` }}>
-              <button className={`path-node ${state}`} onClick={() => setOpen(open === i ? -1 : i)} aria-expanded={open === i}>
-                {state === 'done' ? '✓' : last ? '★' : i + 1}
+            <div key={n.key} className="path-stop" style={{ '--x': `${OFFSETS[i % OFFSETS.length]}px` }}>
+              <button className={`path-node emoji ${state}`} onClick={() => setOpen(open === i ? -1 : i)} aria-expanded={open === i} aria-label={n.name}>
+                <span aria-hidden="true">{n.emoji}</span>
               </button>
-              <p className="path-label">{s.name}</p>
+              <p className="path-label">{n.name}</p>
               <p className="path-days">
                 {state === 'done'
                   ? 'Done'
                   : state === 'now'
                     ? "You're here"
-                    : last
-                      ? `Around ${formatDate(addDays(start, total))}`
-                      : `About ${formatDate(addDays(start, Math.max(s.startDay - 1, 0)))}`}
+                    : lastNode
+                      ? 'No finish line. Stay here.'
+                      : n.stage?.id === 'return'
+                        ? `Around ${formatDate(n.when)}`
+                        : `About ${formatDate(n.when)}`}
               </p>
               {open === i && (
                 <div className="card path-card">
-                  {state === 'locked' && i !== next && (
+                  {n.stage && state === 'locked' && i !== nextStage && (
                     <>
                       <p className="eyebrow">Unlocks when</p>
                       <Goals goals={goalsFor(i)} />
                     </>
                   )}
-                  <p className="eyebrow">Exercises</p>
-                  <ul className="list">
-                    {(PROGRAM[partId]?.[s.id] ?? []).map((id) => <li key={id}>{EXERCISES[id].name}</li>)}
-                  </ul>
+                  {n.stage && (
+                    <>
+                      <p className="eyebrow">Exercises</p>
+                      <ul className="list">
+                        {(PROGRAM[partId]?.[n.stage.id] ?? []).map((id) => <li key={id}>{EXERCISES[id].name}</li>)}
+                      </ul>
+                    </>
+                  )}
+                  {n.tier && (
+                    <>
+                      <p className="eyebrow">{n.tier.focus}</p>
+                      <ul className="list">
+                        {(PROGRAM[partId]?.strong ?? []).map((id) => <li key={id}>{EXERCISES[id].name}</li>)}
+                      </ul>
+                      <p className="muted">
+                        {lastNode ? 'Top level. You stay here as long as you keep training.' : `Unlocks after ${n.tierIndex * TIER_DAYS} days of strength training.`}
+                      </p>
+                    </>
+                  )}
                 </div>
               )}
             </div>

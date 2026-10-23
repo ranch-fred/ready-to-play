@@ -45,13 +45,31 @@ export function painSeries(plan) {
   return plan.checkIns.filter((c) => typeof c.answers?.pain === 'number').map((c) => ({ day: c.day, pain: c.answers.pain }))
 }
 
-export function checkInQuestions(partId) {
-  return recovery.checkIns[partId] || []
+// Every question that can ever be asked for this injury (used to look answers up).
+export function allCheckInQuestions(partId) {
+  return [...(recovery.checkIns[partId] || []), ...(recovery.performance?.[partId] || [])]
+}
+
+// The daily questions depend on how the first self-test went and where you are in recovery:
+// - started feeling pretty good (mild): the usual symptom questions plus real performance tests
+//   (single-leg calf raises, hops, and so on)
+// - started rougher (moderate): the gentler symptom questions
+// - fully recovered: pain, plus the performance tests, to track getting stronger
+export function checkInQuestions(partId, { severity, recovered } = {}) {
+  const base = recovery.checkIns[partId] || []
+  const perf = recovery.performance?.[partId] || []
+  if (recovered) return [...base.filter((q) => q.id === 'pain'), ...perf]
+  return severity === 'mild' ? [...base, ...perf] : base
 }
 
 // Applies one daily check-in. The estimate can only move earlier, never later.
-export function applyCheckIn(plan, { partId, day, answers, flagged, minDays }) {
-  const score = symptomScore(checkInQuestions(partId), answers)
+export function applyCheckIn(plan, { partId, day, answers, flagged, minDays, severity, recovered: strengthMode }) {
+  if (strengthMode) {
+    // Once recovered the date doesn't move. We just log how strong you are and watch for pain coming back.
+    const result = { day, shrunk: 0, worse: false, action: flagged ? 'see_care_today' : 'plan', overdue: false, painHigh: (answers.pain ?? 0) >= 4, strength: true }
+    return { ...plan, checkIns: [...plan.checkIns, { day, score: 0, answers }], lastResult: result }
+  }
+  const score = symptomScore(checkInQuestions(partId, { severity }), answers)
   const baseline = plan.baseline ?? score
   const previous = plan.checkIns.length ? plan.checkIns[plan.checkIns.length - 1].score : baseline
 
