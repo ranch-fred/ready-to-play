@@ -6,9 +6,10 @@ import { todayPlan, dayNumber, STAGES, ROUNDS, WORK_SECONDS, BREAK_SECONDS, stag
 import { EXERCISES, PROGRAM } from '../data/exercises'
 import { CareView } from './Care'
 import { CarePopup } from '../components/CarePopup'
-import { Mascot, ThemeToggle } from '../components/Mascot'
+import { Mascot } from '../components/Mascot'
+import { Settings } from '../components/Settings'
 import { useTheme } from '../logic/theme'
-import { isRecovered, strengthInfo, TIERS, TIER_DAYS, STAGE_EMOJI } from '../logic/journey'
+import { isRecovered, strengthInfo, buddyFace, TIERS, TIER_DAYS, STAGE_EMOJI } from '../logic/journey'
 
 const STATUS = {
   plan: { label: 'Recovering', tone: 'good' },
@@ -17,6 +18,7 @@ const STATUS = {
 }
 
 const DAY_MS = 86400000
+const CARE_DAYS = 3
 
 const TABS = [
   { id: 'home', label: 'Home', icon: 'M3 11l9-8 9 8v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z' },
@@ -55,10 +57,10 @@ function StrengthOrb({ info }) {
 }
 
 // Play look: your buddy takes the place of the countdown orb, with a ring that fills as you heal or level up.
-function MascotHero({ emoji, says, ring, children }) {
+function MascotHero({ face, says, ring, children }) {
   return (
     <div className="mascot-hero">
-      <Mascot emoji={emoji} says={says} ring={ring} size="lg" />
+      <Mascot face={face} says={says} ring={ring} size="lg" />
       <div className="mascot-pill">{children}</div>
     </div>
   )
@@ -114,7 +116,7 @@ function Orb({ target, offsetDays, heal }) {
   )
 }
 
-export function Home({ profile, injury, onNewInjury, onCheckIn, onUpdateInjury, onStartSession, onReinjury, startTab = 'home' }) {
+export function Home({ profile, injury, onNewInjury, onCheckIn, onUpdateInjury, onUpdateProfile, onStartSession, onReinjury, startTab = 'home' }) {
   const [tab, setTab] = useState(startTab)
   const theme = useTheme()
   const [doctorFirst, setDoctorFirst] = useState(false)
@@ -123,8 +125,8 @@ export function Home({ profile, injury, onNewInjury, onCheckIn, onUpdateInjury, 
     setTab('care')
     window.scrollTo(0, 0)
   }
-  const { care } = injury
-  const [showCare, setShowCare] = useState(() => !!care && !injury.careSeen)
+  const [showSettings, setShowSettings] = useState(false)
+  const { care: savedCare } = injury
   const closeCare = (toCareTab) => {
     setShowCare(false)
     if (!injury.careSeen) onUpdateInjury({ ...injury, careSeen: true })
@@ -136,6 +138,9 @@ export function Home({ profile, injury, onNewInjury, onCheckIn, onUpdateInjury, 
   const spots = part?.locations.filter((l) => spotIds.includes(l.id)).map((l) => l.label) ?? []
   const offset = injury.dayOffset || 0
   const day = dayNumber(injury)
+  // The care reminder is for the first few days. After day 3 it quietly goes away (the Tools tab still has doctors).
+  const care = savedCare && day <= CARE_DAYS ? savedCare : null
+  const [showCare, setShowCare] = useState(() => !!care && !injury.careSeen)
   const title = part
     ? `${injury.side ? injury.side[0].toUpperCase() + injury.side.slice(1) + ' ' : ''}${part.name.toLowerCase()}`
     : 'Injury'
@@ -146,12 +151,14 @@ export function Home({ profile, injury, onNewInjury, onCheckIn, onUpdateInjury, 
   const strong = recovered ? strengthInfo(plan, day) : null
   const status = recovered ? { label: `${strong.current.emoji} ${strong.current.name}`, tone: 'good' } : STATUS[outcome.action] || STATUS.see_trainer
   const checkedToday = plan?.checkIns.some((c) => c.day === day)
+  const buddyId = profile?.buddy ?? 'classic'
+  const firstName = profile?.name?.split(' ')[0]
   const says = recovered
     ? strong.current.focus
     : care && !checkedToday
       ? "Let's get that checked by a doctor too!"
       : !checkedToday
-        ? "Hi! Ready for today's check-in?"
+        ? firstName ? `Hi ${firstName}! Ready for today's check-in?` : "Hi! Ready for today's check-in?"
         : plan?.sessions?.[day]
           ? 'All done today! See you tomorrow 🎉'
           : "Nice check-in! Let's do today's session."
@@ -165,11 +172,27 @@ export function Home({ profile, injury, onNewInjury, onCheckIn, onUpdateInjury, 
   return (
     <div className="screen home tabbed">
       <header className="home-head">
-        <div className="logo small">READY<span>TO</span>PLAY</div>
+        <div className="head-left">
+          <button className="gear-btn" onClick={() => setShowSettings(true)} aria-label="Settings">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <circle cx="12" cy="12" r="3.2" />
+              <path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.9.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.9-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.9V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z" />
+            </svg>
+          </button>
+          <div className="logo small">READY<span>TO</span>PLAY</div>
+        </div>
         <p className="hello">{profile?.name ? `Hi ${profile.name}` : `Day ${day}`}</p>
       </header>
 
-      {showCare && <CarePopup care={care} onClose={closeCare} />}
+      {showSettings && (
+        <Settings
+          profile={profile}
+          onSave={(p) => onUpdateProfile?.(p)}
+          onClose={() => setShowSettings(false)}
+        />
+      )}
+
+      {showCare && care && <CarePopup care={care} onClose={closeCare} />}
 
       <div className="pane" key={tab}>
       {tab === 'home' && (
@@ -192,7 +215,7 @@ export function Home({ profile, injury, onNewInjury, onCheckIn, onUpdateInjury, 
               {recovered ? (
                 <>
                   {theme === 'play' ? (
-                    <MascotHero emoji={strong.current.emoji} says={says} ring={strong.progress}>
+                    <MascotHero face={buddyFace(buddyId, 1, strong)} says={says} ring={strong.progress}>
                       <b>Level {strong.tier + 1}</b>{strong.top ? ' · top level' : ''}
                       <small>{strong.next ? `${strong.daysToNext} strength day${strong.daysToNext === 1 ? '' : 's'} to ${strong.next.emoji} ${strong.next.name}` : 'Top of the food chain. Stay here.'}</small>
                     </MascotHero>
@@ -209,7 +232,7 @@ export function Home({ profile, injury, onNewInjury, onCheckIn, onUpdateInjury, 
               ) : (
                 <>
                   {theme === 'play' ? (
-                    <MascotHero emoji={STAGE_EMOJI[phase.id]} says={says} ring={healProgress(plan, day)}>
+                    <MascotHero face={buddyFace(buddyId, healProgress(plan, day), null)} says={says} ring={healProgress(plan, day)}>
                       <CountdownText target={backDate.getTime()} offsetDays={offset} />
                     </MascotHero>
                   ) : (
@@ -286,11 +309,6 @@ export function Home({ profile, injury, onNewInjury, onCheckIn, onUpdateInjury, 
           <button className="btn ghost" onClick={() => openTools(true)}>Find a doctor</button>
           <button className="btn ghost" onClick={onNewInjury}>Report a new injury</button>
 
-          <div className="card look-card">
-            <p className="eyebrow">Look and feel</p>
-            <ThemeToggle />
-          </div>
-
           {plan && (
             <div className="card demo-tools">
               <p className="eyebrow">Presenter tools · Day {day}</p>
@@ -319,7 +337,7 @@ export function Home({ profile, injury, onNewInjury, onCheckIn, onUpdateInjury, 
           <h1 className="title">Tools</h1>
           <CareView
             partId={injury.partId}
-            outcome={care ? { ...outcome, action: care.action } : outcome}
+            outcome={savedCare ? { ...outcome, action: savedCare.action } : outcome}
             lastResult={recovered ? null : plan?.lastResult}
             stage={today?.stage ?? 0}
             cantWalk={cantWalk}

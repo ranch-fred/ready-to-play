@@ -41,3 +41,36 @@ export function strengthInfo(plan, day) {
     progress: top ? 1 : (days - tier * TIER_DAYS) / TIER_DAYS,
   }
 }
+
+// How far along the recovery is for the buddy's growing: days passing and feeling better both count.
+export const HATCH_AT = [0, 0.15, 0.4, 0.65, 0.85]
+
+// Pick the buddy you want in Settings. Every buddy grows through five steps while you recover (the ladder), and once
+// you're recovered it is fully grown and wears a badge for your strength level. "Hatchling" is the original:
+// an egg that hatches, then turns into a mouse, then bigger and bigger animals up to a gorilla.
+// Each ladder step: face = emoji, or svg = a drawn character; grow = how big it is, from 0.6 to 1.1.
+const step = (face, grow) => ({ face, grow })
+const draw = (svg, grow) => ({ svg, grow })
+export const BUDDIES = [
+  { id: 'classic', name: 'Hatchling', blurb: 'Hatches, then mouse to gorilla', preview: step('🐣', 1), ladder: [step('🥚', 0.9), step('🐣', 0.85), step('🐥', 0.9), step('🐤', 0.95), step('🐔', 1)] },
+  { id: 'ostrich', name: 'Ostrich', blurb: 'Starts as an egg, grows tall', preview: draw('ostrich', 0.85), ladder: [step('🥚', 0.9), draw('ostrich', 0.55), draw('ostrich', 0.7), draw('ostrich', 0.85), draw('ostrich', 1)] },
+  { id: 'dog', name: 'Dog', blurb: 'Puppy to big dog', preview: step('🐶', 1), ladder: [step('🐶', 0.6), step('🐶', 0.72), step('🐶', 0.85), step('🐕', 0.95), step('🐕', 1.05)] },
+  { id: 'cat', name: 'Cat', blurb: 'Kitten to big cat', preview: step('🐱', 1), ladder: [step('🐱', 0.6), step('🐱', 0.72), step('🐱', 0.85), step('🐈', 0.95), step('🐈', 1.05)] },
+  { id: 'penguin', name: 'Penguin', blurb: 'Egg to cool penguin', preview: step('🐧', 1), ladder: [step('🥚', 0.9), step('🐧', 0.6), step('🐧', 0.75), step('🐧', 0.9), step('🐧', 1.05)] },
+  { id: 'dino', name: 'Dino', blurb: 'Egg to T. rex', preview: step('🦖', 1), ladder: [step('🥚', 0.9), step('🦎', 0.65), step('🦎', 0.85), step('🦕', 0.95), step('🦖', 1.05)] },
+]
+
+// What the buddy looks like right now: its growth step while recovering, fully grown (with a strength badge) after.
+export function buddyFace(buddyId, progress, strong) {
+  const buddy = BUDDIES.find((b) => b.id === buddyId) ?? BUDDIES[0]
+  if (strong) {
+    if (buddy.id === 'classic') return { face: strong.current.emoji, grow: 1 }
+    const grown = buddy.ladder[buddy.ladder.length - 1]
+    return { ...grown, badge: strong.current.emoji }
+  }
+  let i = 0
+  HATCH_AT.forEach((t, k) => {
+    if (progress >= t) i = k
+  })
+  return buddy.ladder[i]
+}

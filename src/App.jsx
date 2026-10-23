@@ -198,7 +198,7 @@ export default function App() {
           onBack={back}
           onSave={(profile) => {
             const next = {
-              profile,
+              profile: { ...saved?.profile, ...profile },
               injury: {
                 partId,
                 side: state.side,
@@ -224,6 +224,11 @@ export default function App() {
           profile={saved.profile}
           injury={saved.injury}
           onUpdateInjury={saveInjury}
+          onUpdateProfile={(profile) => {
+            const next = { ...saved, profile }
+            saveState(next)
+            setSaved(next)
+          }}
           onReinjury={reinjure}
           onStartSession={() => go({ screen: 'session', homeTab: 'today' })}
           onCheckIn={(day) => go({ screen: 'checkin', day })}

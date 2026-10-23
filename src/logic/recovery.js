@@ -35,9 +35,10 @@ export function startPlan(partId, estimate, baseline = null) {
 export function healProgress(plan, day) {
   const time = Math.min(1, Math.max(0, (day - 1) / Math.max(1, plan.projected)))
   const last = plan.checkIns[plan.checkIns.length - 1]
-  if (!last || !(plan.baseline > 0)) return time * 0.6
+  if (!last || !(plan.baseline > 0)) return time
   const symptoms = Math.min(1, Math.max(0, 1 - last.score / plan.baseline))
-  return Math.min(1, 0.4 * time + 0.6 * symptoms)
+  // Days passing always count. Feeling better than the calendar says pulls it ahead.
+  return Math.min(1, Math.max(time, 0.4 * time + 0.6 * symptoms))
 }
 
 // Pain (0-10) from each daily check-in, for the trend line.
@@ -94,7 +95,7 @@ export function applyCheckIn(plan, { partId, day, answers, flagged, minDays, sev
     baseline,
     projected,
     worseStreak,
-    checkIns: [...plan.checkIns, { day, score, answers }],
+    checkIns: [...plan.checkIns, { day, score, answers, projected }],
     lastResult: result,
   }
 }

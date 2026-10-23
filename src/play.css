@@ -321,3 +321,26 @@
 :root[data-theme='play'] .pain input[type='range']::-webkit-slider-thumb { -webkit-appearance: none; width: 34px; height: 34px; border-radius: 50%; background: #fff; border: 5px solid var(--accent); box-shadow: 0 4px 0 rgba(23, 53, 107, 0.25); cursor: grab; }
 :root[data-theme='play'] .pain input[type='range']::-moz-range-thumb { width: 24px; height: 24px; border-radius: 50%; background: #fff; border: 5px solid var(--accent); box-shadow: 0 4px 0 rgba(23, 53, 107, 0.25); cursor: grab; }
 :root[data-theme='play'] .pain input[type='range']::-moz-range-track { height: 18px; border-radius: 9px; background: transparent; }
+
+/* ---- Settings, buddy picker, chart tabs (play) ---- */
+:root[data-theme='play'] { --sheet-bg: #eaf7ff; }
+:root[data-theme='play'] .settings-overlay { background: rgba(23, 53, 107, 0.4); }
+:root[data-theme='play'] .settings-sheet { border: 0; box-shadow: 0 -8px 40px rgba(30, 90, 170, 0.25); }
+:root[data-theme='play'] .settings-head h2 { font-style: normal; text-transform: none; color: var(--accent-2); }
+:root[data-theme='play'] .gear-btn { background: #fff; box-shadow: 0 3px 0 #bddcf7; border: 0; color: var(--accent-2); }
+:root[data-theme='play'] .buddy-card { background: #fff; border-color: transparent; box-shadow: 0 4px 0 #bddcf7; }
+:root[data-theme='play'] .buddy-card.on { border-color: var(--accent); background: #f2faff; }
+:root[data-theme='play'] .switch { background: #c9dbef; }
+:root[data-theme='play'] .switch-row + .switch-row { border-color: rgba(46, 110, 190, 0.12); }
+:root[data-theme='play'] .chart-tabs { background: #d9ecfb; }
+:root[data-theme='play'] .chart-tabs button.on { background: #fff; color: var(--accent-2); box-shadow: 0 3px 0 #b5d5f2; }
+:root[data-theme='play'] .chart-tick { fill: var(--muted); }
+:root[data-theme='play'] .chart-target { stroke: var(--candy-coral); }
+:root[data-theme='play'] .chart-target-label { fill: var(--candy-coral); }
+:root[data-theme='play'] .mascot-badge { background: #fff; }
+/* The buddy grows: size = base size x --grow */
+.mascot-face { font-size: calc(92px * var(--grow, 1)); }
+.mascot.lg .mascot-face { font-size: calc(118px * var(--grow, 1)); }
+.mascot-face { transition: font-size 0.5s var(--spring); }
+:root[data-theme='play'] .switch.on { background: var(--candy-mint); }
+:root:not([data-theme='play']) .theme-toggle button.on { background: var(--accent); color: var(--accent-ink); box-shadow: none; }
