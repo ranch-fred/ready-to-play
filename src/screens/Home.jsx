@@ -216,7 +216,7 @@ export function Home({ profile, injury, onNewInjury, onCheckIn, onUpdateInjury, 
                 <>
                   {theme === 'play' ? (
                     <MascotHero face={buddyFace(buddyId, 1, strong)} says={says} ring={strong.progress}>
-                      <b>Level {strong.tier + 1}</b>{strong.top ? ' · top level' : ''}
+                      <b>Level {strong.tier + 1}{strong.top ? ' · top' : ''}</b>
                       <small>{strong.next ? `${strong.daysToNext} strength day${strong.daysToNext === 1 ? '' : 's'} to ${strong.next.emoji} ${strong.next.name}` : 'Top of the food chain. Stay here.'}</small>
                     </MascotHero>
                   ) : (

@@ -176,7 +176,7 @@ button, input { font: inherit; color: inherit; }
 .tile:hover, .choice:hover { border-color: rgba(46, 230, 122, 0.6); }
 .tile.big { flex: 1; min-height: 140px; justify-content: center; align-items: center; }
 .tile.warn { border-color: rgba(255, 90, 90, 0.45); }
-.tile-label { font-family: var(--display); font-size: 24px; overflow-wrap: anywhere; font-weight: 700; text-transform: uppercase; line-height: 1; }
+.tile-label { font-family: var(--display); font-size: 24px; overflow-wrap: break-word; hyphens: manual; font-weight: 700; text-transform: uppercase; line-height: 1; }
 .tile-sub { color: var(--muted); font-size: 13px; margin-top: 6px; }
 
 .choice {

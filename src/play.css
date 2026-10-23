@@ -110,7 +110,7 @@
 :root[data-theme='play'] .card { background-image: none; }
 :root[data-theme='play'] .card.note { border-left: 2px solid #fff; background: #fff8e6; box-shadow: 0 5px 0 #f4dca0, 0 14px 26px rgba(200, 150, 40, 0.14); }
 :root[data-theme='play'] .tile:hover, :root[data-theme='play'] .choice:hover { border-color: var(--accent); }
-:root[data-theme='play'] .tile-label { font-size: 26px; }
+:root[data-theme='play'] .tile-label { font-size: 23px; }
 :root[data-theme='play'] .choice.on { background: #e7f5ff; border-color: var(--accent); }
 :root[data-theme='play'] .choice.on .check { background-color: var(--accent); border-color: var(--accent); }
 :root[data-theme='play'] .check { border: 2px solid #b8d4f0; border-radius: 50%; }
