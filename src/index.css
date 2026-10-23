@@ -81,8 +81,12 @@ button, input { font: inherit; color: inherit; }
 .back-spacer { width: 40px; }
 
 .progress { display: flex; gap: 6px; }
-.dot { width: 28px; height: 6px; border-radius: 3px; background: rgba(255, 255, 255, 0.12); }
-.dot.on { background: var(--accent); box-shadow: 0 0 10px rgba(46, 230, 122, 0.6); }
+.progress { align-items: center; gap: 4px; }
+.foot { width: 16px; height: 31px; fill: rgba(255, 255, 255, 0.14); transition: fill 0.4s ease, filter 0.4s ease; }
+.foot.left { transform: scaleX(-1) rotate(8deg) translateY(-3px); }
+.foot.right { transform: rotate(8deg) translateY(3px); }
+.foot.on { fill: var(--accent); }
+.foot.fresh { filter: drop-shadow(0 0 6px rgba(46, 230, 122, 0.75)); }
 
 .title {
   font-family: var(--display);
@@ -622,7 +626,7 @@ html { -webkit-tap-highlight-color: transparent; }
 @keyframes select-pop { from { transform: scale(0.93); } }
 @keyframes num-pop { from { transform: scale(0.9); } }
 @keyframes tick-in { from { transform: translateY(-4px); } }
-@keyframes dot-grow { from { transform: scaleX(0.15); opacity: 0.5; } }
+@keyframes foot-stamp { from { opacity: 0; scale: 1.5; } 60% { scale: 0.92; } }
 @keyframes jelly {
   0%, 100% { transform: scale(1, 1) translateY(0); }
   25% { transform: scale(1.02, 0.985) translateY(1px); }
@@ -663,7 +667,6 @@ html { -webkit-tap-highlight-color: transparent; }
 }
 
 /* Selecting things */
-.dot { transition: background-color 0.4s ease, box-shadow 0.4s ease; }
 .ex-dots span { transition: background-color 0.4s ease, box-shadow 0.4s ease, transform 0.5s var(--spring); }
 .ex-dots span.now { transform: scaleX(1.25); }
 .pain-value { transition: color 0.3s ease; }
@@ -759,7 +762,7 @@ html { -webkit-tap-highlight-color: transparent; }
   .done-list li:nth-child(n + 4) .tick-dot { animation-delay: 0.8s; }
 
   /* Progress */
-  .dot.fresh { transform-origin: left center; animation: dot-grow 0.7s var(--soft) backwards; }
+  .foot.fresh { animation: foot-stamp 0.6s var(--pop) backwards; }
   .pain-value span { animation: num-pop 0.25s var(--ease-out); }
   .go-big .tick-num { animation: tick-in 0.35s var(--ease-out); }
 
@@ -993,3 +996,10 @@ body::before {
   .route, .gear-tile { transition: none; }
   .route:active, .gear-tile:active { transform: none; }
 }
+
+/* Recommendation card on the result screen */
+.card.recommend { border-color: rgba(46, 230, 122, 0.45); background: linear-gradient(160deg, rgba(46, 230, 122, 0.14), rgba(255, 255, 255, 0.02)); }
+.card.recommend.alert { border-color: rgba(255, 85, 70, 0.55); background: linear-gradient(160deg, rgba(255, 70, 55, 0.16), rgba(255, 255, 255, 0.02)); }
+.recommend-label { font-size: 12px; font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted, #9aa3a0); margin: 0 0 6px; }
+.recommend-who { font-family: var(--display); font-style: italic; font-weight: 800; font-size: 26px; line-height: 1.1; margin: 0 0 6px; }
+.recommend-when { margin: 0; color: var(--muted, #9aa3a0); }

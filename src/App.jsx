@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { rules, redFlagsFor, isTriggered, tailoredQuestions, stopFor, scoreAnswers, buildOutcome, worstAction } from './logic/triage'
+import { rules, redFlagsFor, isTriggered, tailoredQuestions, stopFor, scoreAnswers, buildOutcome, mergeStops } from './logic/triage'
 import { loadState, saveState } from './logic/storage'
 import { Intro } from './screens/Intro'
 import { PickPart, PickSide, PickLocation, RedFlag, SelfTest } from './screens/Triage'
@@ -13,7 +13,7 @@ import { Session } from './screens/Session'
 import { todayPlan, dayNumber } from './logic/plan'
 import { startPlan, applyCheckIn } from './logic/recovery'
 
-const FRESH = { screen: 'intro', partId: null, side: null, locations: [], flagIndex: 0, testIndex: 0, tests: {}, outcome: null }
+const FRESH = { screen: 'intro', partId: null, side: null, locations: [], flagIndex: 0, testIndex: 0, tests: {}, outcome: null, stops: [] }
 
 export default function App() {
   const [saved, setSaved] = useState(() => loadState())
@@ -53,11 +53,12 @@ export default function App() {
   const { screen, partId, locations } = state
   const flags = partId ? redFlagsFor() : []
 
+  // Warning signs never end the form early. They're saved as "stops" and applied to the result once every question is answered.
   const afterFlags = (locs = locations, extra = {}) => {
-    if (partId === 'other' || extra.partId === 'other') return go({ ...extra, screen: 'result', outcome: { action: 'see_trainer', notes: [rules.otherPain.message] } })
-    const gated = locs.filter((l) => l.effect === 'action')
-    if (gated.length) return go({ ...extra, screen: 'result', locations: locs, outcome: { action: worstAction(...gated.map((l) => l.action)), notes: gated.map((l) => l.note) } })
-    go({ ...extra, screen: 'test', locations: locs, testIndex: 0, tests: {} })
+    const gated = locs.filter((l) => l.effect === 'action').map((l) => ({ action: l.action, note: l.note }))
+    const stops = [...(extra.stops ?? state.stops), ...gated]
+    if (partId === 'other' || extra.partId === 'other') return go({ ...extra, stops, screen: 'result', outcome: mergeStops({ action: 'see_trainer', notes: [rules.otherPain.message] }, stops) })
+    go({ ...extra, stops, screen: 'test', locations: locs, testIndex: 0, tests: {} })
   }
 
   const renderScreen = () => {
@@ -86,10 +87,6 @@ export default function App() {
           side={state.side}
           onBack={back}
           onDone={(locs) => {
-            const urgent = locs.filter((l) => l.effect === 'action' && l.action === 'see_care_today')
-            if (urgent.length) {
-              return go({ screen: 'result', locations: locs, outcome: { action: 'see_care_today', notes: urgent.map((l) => l.note) } })
-            }
             if (!flags.length) return afterFlags(locs)
             go({ screen: 'flag', locations: locs, flagIndex: 0 })
           }}
@@ -106,9 +103,9 @@ export default function App() {
           total={flags.length}
           onBack={back}
           onAnswer={(answer) => {
-            if (isTriggered(flag, answer)) return finish({ action: flag.action, notes: flag.note ? [flag.note] : [] })
-            if (state.flagIndex + 1 < flags.length) return go({ flagIndex: state.flagIndex + 1 })
-            afterFlags()
+            const stops = isTriggered(flag, answer) ? [...state.stops, { action: flag.action, note: flag.note }] : state.stops
+            if (state.flagIndex + 1 < flags.length) return go({ stops, flagIndex: state.flagIndex + 1 })
+            afterFlags(locations, { stops })
           }}
         />
       )
@@ -128,10 +125,10 @@ export default function App() {
           onAnswer={(answer) => {
             const answers = { ...state.tests, [test.id]: answer }
             const stop = stopFor(test, answer)
-            if (stop) return finish({ action: stop.action, notes: stop.note ? [stop.note] : [] })
-            if (state.testIndex + 1 < tests.length) return go({ tests: answers, testIndex: state.testIndex + 1 })
+            const stops = stop ? [...state.stops, { action: stop.action, note: stop.note }] : state.stops
+            if (state.testIndex + 1 < tests.length) return go({ tests: answers, stops, testIndex: state.testIndex + 1 })
             const { severity, addDays, notes, focus } = scoreAnswers(tests, answers)
-            const outcome = buildOutcome({ partId, locationIds: locations.map((l) => l.id), severity, addDays, notes, focus })
+            const outcome = mergeStops(buildOutcome({ partId, locationIds: locations.map((l) => l.id), severity, addDays, notes, focus }), stops)
             // A plan gets the loading screen, then goes straight to the home tabs. Anything else shows the result screen.
             if (outcome.action === 'plan') return go({ screen: 'loading', tests: answers, outcome })
             finish(outcome)

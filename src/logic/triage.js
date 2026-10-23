@@ -68,6 +68,29 @@ export function scoreAnswers(qs, answers) {
   return { severity, ratio, addDays, notes, focus }
 }
 
+// Warning signs never cut the questions short. They're collected as "stops" and applied once the form is done.
+export function mergeStops(outcome, stops = []) {
+  if (!stops.length) return outcome
+  const action = worstAction(outcome.action, ...stops.map((s) => s.action))
+  const notes = [...new Set([...stops.flatMap((s) => (s.note ? [s.note] : [])), ...(outcome.notes ?? [])])]
+  return { action, severity: outcome.severity, notes }
+}
+
+// Who to see, based on how serious the answers were and what the notes mention.
+export function recommendation(outcome) {
+  const text = (outcome.notes ?? []).join(' ').toLowerCase()
+  const xray = /x-ray|fracture|break|broken/.test(text)
+  const tendon = /tendon|surgery/.test(text)
+  const joint = /out of place|dislocat/.test(text)
+  if (outcome.action === 'see_care_today') {
+    return {
+      who: xray ? 'Urgent care or the ER' : joint ? 'Urgent care or the ER' : tendon ? 'A doctor today, ideally orthopedics' : 'Urgent care or your doctor',
+      when: xray ? 'Go today. You likely need an X-ray before any recovery plan.' : 'Go today, and stop playing until you are checked.',
+    }
+  }
+  return { who: 'A doctor or sports medicine clinic', when: 'Book a visit soon. Take it easy and skip anything that hurts until then.' }
+}
+
 export function isTriggered(flag, answer) {
   return answer === flag.triggerAnswer
 }

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Screen } from '../components/Screen'
-import { rules, addDays, formatDate } from '../logic/triage'
+import { rules, addDays, formatDate, recommendation } from '../logic/triage'
 import { paddedDays } from '../logic/recovery'
 
 const TONE = { see_care_today: 'alert', see_trainer: 'caution', plan: 'good' }
@@ -31,6 +31,17 @@ export function Result({ outcome, onContinue, onBack, onFindCare }) {
         <h1 className="result-title">{action.title}</h1>
         <p className="result-copy">{action.message}</p>
       </div>
+
+      {outcome.action !== 'plan' && (() => {
+        const rec = recommendation(outcome)
+        return (
+          <div className={`card recommend ${tone === 'alert' ? 'alert' : ''}`}>
+            <p className="recommend-label">Our recommendation</p>
+            <p className="recommend-who">See: {rec.who}</p>
+            <p className="recommend-when">{rec.when}</p>
+          </div>
+        )
+      })()}
 
       {outcome.notes?.map((n) => (
         <div key={n} className="card note"><p>{n}</p></div>

@@ -1,5 +1,19 @@
 import { rules } from '../logic/triage'
 
+// A bare footprint (right foot; the left is mirrored). Walking steps alternate left and right.
+export function Footprint({ left, className = '' }) {
+  return (
+    <svg className={`foot ${left ? 'left' : 'right'} ${className}`} viewBox="0 0 24 46" aria-hidden="true">
+      <path d="M7 16C4.5 18.5 6 22 8.5 27c2 4 0 8 1 12 1 4 7.500 4.500 8-.5.500-4.500-1.500-7.500 0-12.500 1.500-5 2.500-9 -.500-11.500C14 12.500 9.500 13 7 16Z" />
+      <circle cx="7.500" cy="8.500" r="3.200" />
+      <circle cx="12.200" cy="6.600" r="1.900" />
+      <circle cx="15.600" cy="7.600" r="1.800" />
+      <circle cx="18.600" cy="9.600" r="1.600" />
+      <circle cx="20.800" cy="12.600" r="1.350" />
+    </svg>
+  )
+}
+
 export function Screen({ step, totalSteps, onBack, title, subtitle, children, footer, stickyFooter }) {
   return (
     <div className="screen">
@@ -14,7 +28,7 @@ export function Screen({ step, totalSteps, onBack, title, subtitle, children, fo
         {step && (
           <div className="progress" aria-label={`Step ${step} of ${totalSteps}`}>
             {Array.from({ length: totalSteps }, (_, i) => (
-              <span key={i} className={i + 1 === step ? 'dot on fresh' : i < step ? 'dot on' : 'dot'} />
+              <Footprint key={i} left={i % 2 === 0} className={i + 1 === step ? 'on fresh' : i < step ? 'on' : ''} />
             ))}
           </div>
         )}
