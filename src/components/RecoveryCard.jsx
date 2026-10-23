@@ -1,7 +1,6 @@
 import { lazy, Suspense, useState } from 'react'
 import { healProgress, painSeries } from '../logic/recovery'
 import { isRecovered } from '../logic/journey'
-import { ProgressChart } from './ProgressChart'
 
 const HealingModel3D = lazy(() => import('./HealingModel3D'))
 
@@ -42,8 +41,6 @@ export function RecoveryCard({ injury, plan, day }) {
         <div><b className="volt">{saved}</b><span>{saved === 1 ? 'Day saved' : 'Days saved'}</span></div>
         <div><b>{plan.checkIns.length}</b><span>{plan.checkIns.length === 1 ? 'Check-in' : 'Check-ins'}</span></div>
       </div>
-
-      <ProgressChart plan={plan} />
     </section>
   )
 }
