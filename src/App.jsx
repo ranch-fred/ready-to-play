@@ -34,6 +34,11 @@ export default function App() {
     setState(history[history.length - 1])
     setHistory(history.slice(0, -1))
   }
+  // Jumps that aren't a step forward or back (finishing a plan, leaving a session) still glide in forward.
+  const jump = (next) => {
+    setDir('forward')
+    setState(next)
+  }
   const restart = () => {
     setHistory([])
     setState(FRESH)
@@ -164,7 +169,7 @@ export default function App() {
             saveState(next)
             setSaved(next)
             setHistory([])
-            setState({ ...FRESH, screen: 'home' })
+            jump({ ...FRESH, screen: 'home' })
           }}
         />
       )
@@ -189,7 +194,7 @@ export default function App() {
             saveState(next)
             setSaved(next)
             setHistory([])
-            setState({ ...FRESH, screen: 'home' })
+            jump({ ...FRESH, screen: 'home' })
           }}
         />
       )
@@ -207,7 +212,7 @@ export default function App() {
           onNewInjury={() => {
             if (!window.confirm('Start a new injury report? Your current plan will be replaced.')) return
             setHistory([])
-            setState({ ...FRESH, screen: 'part' })
+            jump({ ...FRESH, screen: 'part' })
           }}
         />
       )
@@ -228,7 +233,7 @@ export default function App() {
             })
             saveInjury({ ...injury, plan })
             setHistory([])
-            setState({ ...FRESH, screen: 'checkinResult' })
+            jump({ ...FRESH, screen: 'checkinResult' })
           }}
         />
       )
@@ -238,7 +243,7 @@ export default function App() {
       return (
         <CheckInResult
           injury={saved.injury}
-          onDone={() => setState({ ...FRESH, screen: 'home', homeTab: 'today' })}
+          onDone={() => jump({ ...FRESH, screen: 'home', homeTab: 'today' })}
           onFindCare={() => go({ screen: 'care' })}
         />
       )
@@ -255,12 +260,12 @@ export default function App() {
           today={today}
           onExit={() => {
             setHistory([])
-            setState({ ...FRESH, screen: 'home', homeTab: 'today' })
+            jump({ ...FRESH, screen: 'home', homeTab: 'today' })
           }}
           onFinish={() => {
             saveInjury({ ...injury, plan: { ...plan, sessions: { ...plan.sessions, [day]: { rounds: today.rounds, stage: today.stage } } } })
             setHistory([])
-            setState({ ...FRESH, screen: 'home', homeTab: 'home' })
+            jump({ ...FRESH, screen: 'home', homeTab: 'home' })
           }}
         />
       )
