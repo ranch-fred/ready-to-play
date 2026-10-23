@@ -6,6 +6,8 @@ import { todayPlan, dayNumber, STAGES, ROUNDS, WORK_SECONDS, BREAK_SECONDS, stag
 import { EXERCISES, PROGRAM } from '../data/exercises'
 import { CareView } from './Care'
 import { CarePopup } from '../components/CarePopup'
+import { Mascot, ThemeToggle } from '../components/Mascot'
+import { useTheme } from '../logic/theme'
 import { isRecovered, strengthInfo, TIERS, TIER_DAYS, STAGE_EMOJI } from '../logic/journey'
 
 const STATUS = {
@@ -52,6 +54,32 @@ function StrengthOrb({ info }) {
   )
 }
 
+// Play look: your buddy takes the place of the countdown orb, with a ring that fills as you heal or level up.
+function MascotHero({ emoji, says, ring, children }) {
+  return (
+    <div className="mascot-hero">
+      <Mascot emoji={emoji} says={says} ring={ring} size="lg" />
+      <div className="mascot-pill">{children}</div>
+    </div>
+  )
+}
+
+function CountdownText({ target, offsetDays }) {
+  const now = useNow() + offsetDays * DAY_MS
+  const left = Math.max(0, target - now)
+  const days = Math.floor(left / DAY_MS)
+  const hours = Math.floor((left % DAY_MS) / 3600000)
+  const mins = Math.floor((left % 3600000) / 60000)
+  const secs = Math.floor((left % 60000) / 1000)
+  const pad = (n) => String(n).padStart(2, '0')
+  return (
+    <>
+      <b>{days}</b> {days === 1 ? 'day' : 'days'} to go
+      <small>{pad(hours)}:{pad(mins)}:{pad(secs)} until you're recovered</small>
+    </>
+  )
+}
+
 function TierRow({ tier }) {
   return (
     <div className="tier-row" aria-hidden="true">
@@ -88,6 +116,7 @@ function Orb({ target, offsetDays, heal }) {
 
 export function Home({ profile, injury, onNewInjury, onCheckIn, onUpdateInjury, onStartSession, onReinjury, startTab = 'home' }) {
   const [tab, setTab] = useState(startTab)
+  const theme = useTheme()
   const [doctorFirst, setDoctorFirst] = useState(false)
   const openTools = (doctor) => {
     setDoctorFirst(!!doctor)
@@ -117,6 +146,15 @@ export function Home({ profile, injury, onNewInjury, onCheckIn, onUpdateInjury, 
   const strong = recovered ? strengthInfo(plan, day) : null
   const status = recovered ? { label: `${strong.current.emoji} ${strong.current.name}`, tone: 'good' } : STATUS[outcome.action] || STATUS.see_trainer
   const checkedToday = plan?.checkIns.some((c) => c.day === day)
+  const says = recovered
+    ? strong.current.focus
+    : care && !checkedToday
+      ? "Let's get that checked by a doctor too!"
+      : !checkedToday
+        ? "Hi! Ready for today's check-in?"
+        : plan?.sessions?.[day]
+          ? 'All done today! See you tomorrow 🎉'
+          : "Nice check-in! Let's do today's session."
   const last = plan?.lastResult
   const today = plan ? todayPlan({ ...injury, plan }, day) : null
   const phase = today && !recovered ? { ...phaseRanges(injury.partId, plan.projected)[today.stage], index: today.stage, count: STAGES.length } : null
@@ -153,7 +191,14 @@ export function Home({ profile, injury, onNewInjury, onCheckIn, onUpdateInjury, 
             <>
               {recovered ? (
                 <>
-                  <StrengthOrb info={strong} />
+                  {theme === 'play' ? (
+                    <MascotHero emoji={strong.current.emoji} says={says} ring={strong.progress}>
+                      <b>Level {strong.tier + 1}</b>{strong.top ? ' · top level' : ''}
+                      <small>{strong.next ? `${strong.daysToNext} strength day${strong.daysToNext === 1 ? '' : 's'} to ${strong.next.emoji} ${strong.next.name}` : 'Top of the food chain. Stay here.'}</small>
+                    </MascotHero>
+                  ) : (
+                    <StrengthOrb info={strong} />
+                  )}
                   <div className="card center">
                     <p className="eyebrow">Fully recovered 🎉</p>
                     <p className="big-date">{strong.current.emoji} {strong.current.name}</p>
@@ -163,7 +208,13 @@ export function Home({ profile, injury, onNewInjury, onCheckIn, onUpdateInjury, 
                 </>
               ) : (
                 <>
-                  <Orb target={backDate.getTime()} offsetDays={offset} heal={healProgress(plan, day)} />
+                  {theme === 'play' ? (
+                    <MascotHero emoji={STAGE_EMOJI[phase.id]} says={says} ring={healProgress(plan, day)}>
+                      <CountdownText target={backDate.getTime()} offsetDays={offset} />
+                    </MascotHero>
+                  ) : (
+                    <Orb target={backDate.getTime()} offsetDays={offset} heal={healProgress(plan, day)} />
+                  )}
                   <div className="card center">
                     <p className="eyebrow">Our best guess</p>
                     <p className="big-date">{formatDate(backDate)}</p>
@@ -234,6 +285,11 @@ export function Home({ profile, injury, onNewInjury, onCheckIn, onUpdateInjury, 
 
           <button className="btn ghost" onClick={() => openTools(true)}>Find a doctor</button>
           <button className="btn ghost" onClick={onNewInjury}>Report a new injury</button>
+
+          <div className="card look-card">
+            <p className="eyebrow">Look and feel</p>
+            <ThemeToggle />
+          </div>
 
           {plan && (
             <div className="card demo-tools">

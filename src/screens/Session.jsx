@@ -1,7 +1,7 @@
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { createClock, STILL } from '../logic/clock'
 import { period } from '../logic/motion'
-import { ROUNDS, WORK_SECONDS, BREAK_SECONDS } from '../logic/plan'
+import { ROUNDS as DEFAULT_ROUNDS, WORK_SECONDS, BREAK_SECONDS } from '../logic/plan'
 import { haptic } from '../logic/feedback'
 
 const ExerciseModel3D = lazy(() => import('../components/ExerciseModel3D'))
@@ -51,6 +51,7 @@ function useBeeps() {
 
 export function Session({ partId, side, today, onExit, onFinish }) {
   const exercises = today.exercises
+  const ROUNDS = today.rounds ?? DEFAULT_ROUNDS
   const [idx, setIdx] = useState(0)
   const [round, setRound] = useState(1)
   const [phase, setPhase] = useState('watch')
@@ -137,7 +138,7 @@ export function Session({ partId, side, today, onExit, onFinish }) {
             <svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5" /></svg>
           </div>
           <h1 className="title center">Done for today</h1>
-          <p className="subtitle center">{exercises.length} exercises · 3 rounds each</p>
+          <p className="subtitle center">{exercises.length} exercises · {ROUNDS} rounds each</p>
         </div>
         <div className="card">
           <ul className="done-list">

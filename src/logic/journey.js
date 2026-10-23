@@ -1,7 +1,8 @@
 // The whole journey: five recovery stages, then endless strength levels that go from a weak animal to a gorilla.
 // Once you reach the gorilla you stay there.
 
-export const STAGE_EMOJI = { protect: '🧊', motion: '🚶', strength: '💪', sport: '⚡', return: '🏁' }
+// Egg to chick while you recover, then mouse to gorilla once you're strong: one growing buddy the whole way.
+export const STAGE_EMOJI = { protect: '🥚', motion: '🐣', strength: '🐥', sport: '🐤', return: '🐔' }
 
 export const TIER_DAYS = 3 // strength days per level
 

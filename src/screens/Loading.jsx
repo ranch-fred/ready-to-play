@@ -28,6 +28,7 @@ export function Loading({ onDone }) {
     <div className="screen loading">
       <div className="loading-center">
         <div className="loading-orb" aria-hidden="true" />
+        <div className="loading-egg play-only" aria-hidden="true">🥚</div>
         <p className="loading-text" aria-live="polite" key={step}>{STEPS[step]}…</p>
         <div className="loading-bar"><span style={{ animationDuration: `${DURATION}ms` }} /></div>
         <ul className="loading-steps">
