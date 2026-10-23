@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { rules, addDays, formatDate, phaseRanges } from '../logic/triage'
-import { recovery, startPlan } from '../logic/recovery'
+import { recovery, startPlan, healProgress } from '../logic/recovery'
+import { RecoveryCard } from '../components/RecoveryCard'
 import { todayPlan, dayNumber, STAGES, ROUNDS, WORK_SECONDS, BREAK_SECONDS, stageGoals } from '../logic/plan'
 import { EXERCISES, PROGRAM } from '../data/exercises'
 import { CareView } from './Care'
@@ -30,7 +31,7 @@ function useNow() {
   return now
 }
 
-function Orb({ target, offsetDays }) {
+function Orb({ target, offsetDays, heal }) {
   const now = useNow() + offsetDays * DAY_MS
   const left = Math.max(0, target - now)
   const days = Math.floor(left / DAY_MS)
@@ -40,6 +41,10 @@ function Orb({ target, offsetDays }) {
   const pad = (n) => String(n).padStart(2, '0')
   return (
     <div className="orb-wrap">
+      <div className="dial" aria-hidden="true">
+        <span className="dial-ticks" />
+        <span className="dial-arc" style={{ '--p': heal }} />
+      </div>
       <div className="orb" role="timer" aria-label={`${days} days, ${hours} hours until recovered`}>
         <span className="orb-days">{days}</span>
         <span className="orb-unit">{days === 1 ? 'day' : 'days'}</span>
@@ -91,7 +96,7 @@ export function Home({ profile, injury, onNewInjury, onCheckIn, onUpdateInjury, 
 
           {plan ? (
             <>
-              <Orb target={backDate.getTime()} offsetDays={offset} />
+              <Orb target={backDate.getTime()} offsetDays={offset} heal={healProgress(plan, day)} />
               <div className="card center">
                 <p className="eyebrow">Our best guess</p>
                 <p className="big-date">{formatDate(backDate)}</p>
@@ -117,6 +122,8 @@ export function Home({ profile, injury, onNewInjury, onCheckIn, onUpdateInjury, 
                 <button className="btn primary" onClick={() => setTab('today')}>Start today's session</button>
               )}
               {!checkedToday && today?.doneToday && <p className="muted center tight">Today's session done ✓</p>}
+
+              <RecoveryCard injury={injury} plan={plan} day={day} />
 
               {last && (last.action !== 'plan' || last.overdue) && (
                 <div className="card note">

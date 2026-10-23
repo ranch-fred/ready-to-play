@@ -46,10 +46,10 @@ export function mapLink(search, town) {
 }
 
 const PLACES = {
-  urgent: { name: 'Urgent care', search: 'urgent care', why: 'Get it checked today. They can X-ray it.' },
-  ortho: { name: 'Orthopedic walk-in', search: 'orthopedic urgent care', why: 'Bone and joint experts. Walk in, no appointment.' },
-  sports: { name: 'Sports medicine doctor', search: 'sports medicine doctor', why: 'Checks that it heals right and you return safely.' },
-  regular: { name: 'Your regular doctor', search: 'primary care doctor', why: "Only if it's not getting better in a week." },
+  urgent: { name: 'Urgent care', search: 'urgent care', when: 'Go today', tone: 'alert', why: 'Get it checked today. They can X-ray it.' },
+  ortho: { name: 'Orthopedic walk-in', search: 'orthopedic urgent care', when: 'See someone soon', tone: 'caution', why: 'Bone and joint experts. Walk in, no appointment.' },
+  sports: { name: 'Sports medicine doctor', search: 'sports medicine doctor', when: 'See someone soon', tone: 'caution', why: 'Checks that it heals right and you return safely.' },
+  regular: { name: 'Your regular doctor', search: 'primary care doctor', when: 'Only if not improving', tone: 'good', why: "Only if it's not getting better in a week." },
 }
 
 // One place, chosen from the injury and how it's going.

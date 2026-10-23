@@ -2,6 +2,7 @@ import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } fro
 import { createClock, STILL } from '../logic/clock'
 import { period } from '../logic/motion'
 import { ROUNDS, WORK_SECONDS, BREAK_SECONDS } from '../logic/plan'
+import { haptic } from '../logic/feedback'
 
 const ExerciseModel3D = lazy(() => import('../components/ExerciseModel3D'))
 
@@ -94,6 +95,9 @@ export function Session({ partId, side, today, onExit, onFinish }) {
     }
     clock.pause()
     setPhase('done')
+    // A rising three-note chime and a buzz for finishing the whole session.
+    ;[[660, 0], [880, 150], [1320, 300]].forEach(([freq, ms]) => setTimeout(() => beep(freq, 200), ms))
+    haptic([40, 60, 40, 60, 180])
   }, [beep, clock, exercises.length, go, idx, round])
 
   useEffect(() => {

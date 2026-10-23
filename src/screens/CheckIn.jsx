@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { haptic } from '../logic/feedback'
 import { Screen, Choice } from '../components/Screen'
 import { rules, addDays, formatDate } from '../logic/triage'
 import { checkInQuestions, recovery } from '../logic/recovery'
@@ -68,6 +69,10 @@ export function CheckInResult({ injury, onDone, onFindCare }) {
   const r = plan.lastResult
   const newDate = formatDate(addDays(injury.date, plan.projected))
   const needsCare = r.action !== 'plan' || r.overdue || r.painHigh
+  const improved = r.action === 'plan' && r.shrunk > 0
+  useEffect(() => {
+    if (improved) haptic([30, 50, 30])
+  }, [improved])
 
   let badge = 'Check-in saved'
   let title = 'Keep going'

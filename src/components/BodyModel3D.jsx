@@ -46,7 +46,7 @@ const fragmentShader = `
   }
 `
 
-function glassMaterial(color, { power, base, opacity, lit = 0 }, fades) {
+export function glassMaterial(color, { power, base, opacity, lit = 0 }, fades) {
   const axes = [0, 1, 2].map((i) => new THREE.Vector3(...(fades[i]?.axis ?? [0, 1, 0])))
   const ranges = [0, 1, 2].map((i) => new THREE.Vector2(fades[i]?.full ?? 0, fades[i]?.zero ?? 1))
   return new THREE.ShaderMaterial({

@@ -30,6 +30,21 @@ export function startPlan(partId, estimate, baseline = null) {
   return { padded, projected: padded, baseline, checkIns: [], worseStreak: 0, lastResult: null }
 }
 
+// How healed the injury looks, 0 to 1. It blends how far through the plan you are with how much better your
+// daily check-ins say you feel than on your first one, so it moves when you improve, not just when days pass.
+export function healProgress(plan, day) {
+  const time = Math.min(1, Math.max(0, (day - 1) / Math.max(1, plan.projected)))
+  const last = plan.checkIns[plan.checkIns.length - 1]
+  if (!last || !(plan.baseline > 0)) return time * 0.6
+  const symptoms = Math.min(1, Math.max(0, 1 - last.score / plan.baseline))
+  return Math.min(1, 0.4 * time + 0.6 * symptoms)
+}
+
+// Pain (0-10) from each daily check-in, for the trend line.
+export function painSeries(plan) {
+  return plan.checkIns.filter((c) => typeof c.answers?.pain === 'number').map((c) => ({ day: c.day, pain: c.answers.pain }))
+}
+
 export function checkInQuestions(partId) {
   return recovery.checkIns[partId] || []
 }
