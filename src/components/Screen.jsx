@@ -14,7 +14,7 @@ export function Screen({ step, totalSteps, onBack, title, subtitle, children, fo
         {step && (
           <div className="progress" aria-label={`Step ${step} of ${totalSteps}`}>
             {Array.from({ length: totalSteps }, (_, i) => (
-              <span key={i} className={i < step ? 'dot on' : 'dot'} />
+              <span key={i} className={i + 1 === step ? 'dot on fresh' : i < step ? 'dot on' : 'dot'} />
             ))}
           </div>
         )}

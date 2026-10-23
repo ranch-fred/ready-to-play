@@ -129,7 +129,9 @@ export function Session({ partId, side, today, onExit, onFinish }) {
     return (
       <div className="screen session done-screen">
         <div className="done-hero">
-          <div className="done-check" aria-hidden="true">✓</div>
+          <div className="done-check" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5" /></svg>
+          </div>
           <h1 className="title center">Done for today</h1>
           <p className="subtitle center">{exercises.length} exercises · 3 rounds each</p>
         </div>
@@ -217,7 +219,7 @@ export function Session({ partId, side, today, onExit, onFinish }) {
             const fill = state === 'now' ? Math.min(1, t / WORK_SECONDS) : state === 'done' ? 1 : 0
             return (
               <div key={n} className={`round-bar ${state}`}>
-                <span style={{ width: `${fill * 100}%` }} />
+                <span style={{ transform: `scaleX(${fill})` }} />
               </div>
             )
           })}
@@ -227,7 +229,7 @@ export function Session({ partId, side, today, onExit, onFinish }) {
         )}
         {phase === 'go' && (
           <div className="go-row">
-            <p className="go-big">{Math.max(0, Math.ceil(left))}<span>s</span></p>
+            <p className="go-big"><span className="tick-num" key={Math.max(0, Math.ceil(left))}>{Math.max(0, Math.ceil(left))}</span><span>s</span></p>
             <p className="go-label">Round {round} of {ROUNDS}</p>
             <button className="btn ghost pause" onClick={togglePause} aria-label={paused ? 'Resume' : 'Pause'}>
               {paused ? '▶' : '❚❚'}

@@ -19,13 +19,17 @@ export default function App() {
   const [saved, setSaved] = useState(() => loadState())
   const [state, setState] = useState(() => (saved?.injury ? { ...FRESH, screen: 'home' } : FRESH))
   const [history, setHistory] = useState([])
+  // Which way the last move went, so new screens glide in from the right and slide back in from the left.
+  const [dir, setDir] = useState('forward')
 
   const go = (patch) => {
+    setDir('forward')
     setHistory((h) => [...h, state])
     setState((s) => ({ ...s, ...patch }))
     window.scrollTo(0, 0)
   }
   const back = () => {
+    setDir('back')
     if (!history.length) return setState({ ...FRESH, screen: saved?.injury ? 'home' : 'intro' })
     setState(history[history.length - 1])
     setHistory(history.slice(0, -1))
@@ -51,6 +55,7 @@ export default function App() {
     go({ ...extra, screen: 'test', locations: locs, testIndex: 0, tests: {} })
   }
 
+  const renderScreen = () => {
   switch (screen) {
     case 'intro':
       return <Intro onStart={() => go({ screen: 'part' })} />
@@ -280,4 +285,7 @@ export default function App() {
     default:
       return null
   }
+  }
+
+  return <div className="view" data-dir={dir}>{renderScreen()}</div>
 }

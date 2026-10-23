@@ -587,3 +587,198 @@ button:focus-visible, a:focus-visible { outline: 2px solid var(--accent); outlin
 .goal-box { flex: none; width: 22px; height: 22px; border-radius: 7px; border: 1.5px solid var(--glass-border); display: grid; place-items: center; font-size: 13px; font-weight: 900; color: var(--accent-ink); }
 .goals li.done .goal-box { background: var(--accent); border-color: var(--accent); }
 .path-card .eyebrow + .goals { margin-bottom: 10px; }
+
+/* =====================================================================
+   Motion system
+   Everything here moves with a soft spring: a little overshoot, then settle.
+   Only transform and opacity are animated, so it stays smooth on phones.
+   ===================================================================== */
+:root {
+  /* Fallbacks for browsers without linear() */
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --soft: cubic-bezier(0.22, 1.25, 0.4, 1);
+  --spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --pop: cubic-bezier(0.3, 1.9, 0.5, 1);
+}
+@supports (transition-timing-function: linear(0, 1)) {
+  :root {
+    /* soft: ~7% overshoot, for screens and cards sliding in */
+    --soft: linear(0, 0.024, 0.086, 0.174, 0.278, 0.388, 0.498, 0.602, 0.699, 0.784, 0.857, 0.919, 0.968, 1.006, 1.034, 1.054, 1.066, 1.072, 1.073, 1.07, 1.065, 1.059, 1.051, 1.043, 1.035, 1.027, 1.021, 1.014, 1.009, 1.005, 1.002, 0.999, 0.997, 0.996, 0.995, 0.995, 1);
+    /* spring: ~16% overshoot, for presses springing back */
+    --spring: linear(0, 0.039, 0.14, 0.279, 0.437, 0.596, 0.745, 0.875, 0.981, 1.061, 1.117, 1.149, 1.162, 1.16, 1.146, 1.125, 1.1, 1.074, 1.049, 1.027, 1.008, 0.994, 0.983, 0.977, 0.974, 0.974, 0.975, 0.978, 0.982, 0.987, 0.991, 0.995, 0.998, 1, 1.002, 1.003, 1);
+    /* pop: ~30% overshoot, for checkmarks and small celebrations */
+    --pop: linear(0, 0.075, 0.263, 0.508, 0.761, 0.984, 1.152, 1.256, 1.296, 1.284, 1.235, 1.164, 1.088, 1.019, 0.965, 0.929, 0.913, 0.913, 0.926, 0.946, 0.969, 0.99, 1.007, 1.019, 1.025, 1.026, 1.023, 1.018, 1.011, 1.004, 0.999, 0.995, 0.993, 0.992, 0.993, 0.994, 1);
+  }
+}
+
+html { -webkit-tap-highlight-color: transparent; }
+
+/* The wrappers add no box of their own */
+.view, .pane { display: contents; }
+
+@keyframes rise { from { opacity: 0; transform: translate3d(var(--dx, 0px), 16px, 0); } }
+@keyframes pop-in { from { opacity: 0; transform: scale(0.4); } }
+@keyframes check-pop { from { transform: scale(0.35); } }
+@keyframes select-pop { from { transform: scale(0.93); } }
+@keyframes num-pop { from { transform: scale(0.78); opacity: 0.4; } }
+@keyframes tick-in { from { transform: translateY(-6px) scale(1.08); opacity: 0.55; } }
+@keyframes dot-grow { from { transform: scaleX(0.15); opacity: 0.5; } }
+@keyframes jelly {
+  0%, 100% { transform: scale(1, 1) translateY(0); }
+  25% { transform: scale(1.035, 0.975) translateY(2px); }
+  50% { transform: scale(0.98, 1.03) translateY(-3px); }
+  75% { transform: scale(1.02, 0.985) translateY(1px); }
+}
+@keyframes orb-in { from { opacity: 0; transform: scale(0.55); } }
+@keyframes sheen { 0% { transform: translateX(-130%); } 30%, 100% { transform: translateX(130%); } }
+@keyframes ring-out { from { transform: scale(1); opacity: 0.5; } to { transform: scale(2.1); opacity: 0; } }
+@keyframes breathe { 0%, 100% { opacity: 0.55; } 50% { opacity: 1; } }
+@keyframes draw { to { stroke-dashoffset: 0; } }
+@keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+@keyframes bar-flow { from { transform: translateX(-100%); } to { transform: translateX(300%); } }
+@keyframes overlay-in { from { opacity: 0; } }
+@keyframes count-pop { from { transform: scale(1.7); opacity: 0; } }
+
+/* Presses: squish in fast, spring back slowly */
+.btn, .tile, .choice, .back, .seg button, .phase-peek, .link-btn, .tips-toggle, .tabbar button {
+  transition: transform 0.6s var(--spring), box-shadow 0.3s ease, background-color 0.25s ease, border-color 0.25s ease, color 0.2s ease, filter 0.2s ease;
+}
+.btn:active, .phase-peek:active { transform: scale(0.96, 0.94); transition: transform 0.09s var(--ease-out), box-shadow 0.15s ease; }
+.tile:active, .choice:active { transform: scale(0.965); transition: transform 0.09s var(--ease-out), border-color 0.15s ease; }
+.back:active { transform: scale(0.88) translateX(-2px); transition: transform 0.09s var(--ease-out); }
+.seg button:active { transform: scale(0.9); transition: transform 0.09s var(--ease-out); }
+.link-btn:active, .tips-toggle:active { transform: scale(0.97); transition: transform 0.09s var(--ease-out); }
+.tabbar button:active { transform: scale(0.9); transition: transform 0.09s var(--ease-out); }
+.btn:disabled:active { transform: none; }
+.path-node { transition: transform 0.5s var(--spring), box-shadow 0.2s ease; }
+.path-node:active { transition: transform 0.08s var(--ease-out), box-shadow 0.08s ease; }
+@media (hover: hover) and (pointer: fine) {
+  .btn:not(:disabled):not(:active):hover { transform: translateY(-2px); }
+  .tile:not(:active):hover { transform: translateY(-3px); }
+  .choice:not(:active):hover { transform: translateY(-1px); }
+}
+
+/* Selecting things */
+.dot { transition: background-color 0.4s ease, box-shadow 0.4s ease; }
+.ex-dots span { transition: background-color 0.4s ease, box-shadow 0.4s ease, transform 0.5s var(--spring); }
+.ex-dots span.now { transform: scaleX(1.25); }
+.pain-value { transition: color 0.3s ease; }
+.pain-value span { display: inline-block; }
+.go-big .tick-num { font-size: inherit; color: inherit; display: inline-block; }
+.round-bar span { width: 100%; transform-origin: left center; transform: scaleX(0); transition: transform 0.12s linear; }
+
+/* Tab bar: a pill that glides under the active tab */
+.tabbar button { position: relative; z-index: 1; }
+.tab-pill {
+  position: absolute; top: 6px; bottom: calc(6px + env(safe-area-inset-bottom)); left: 12px;
+  width: calc((100% - 24px) / 4); border-radius: 14px;
+  background: rgba(46, 230, 122, 0.13);
+  transform: translateX(calc(var(--tab, 0) * 100%));
+  transition: transform 0.6s var(--spring);
+  pointer-events: none;
+}
+
+.loading-steps li { transition: color 0.4s ease, transform 0.5s var(--spring); }
+.loading-steps li.now { transform: translateX(4px); }
+.done-check svg { width: 56px; height: 56px; fill: none; stroke: var(--accent-ink); stroke-width: 3.4; stroke-linecap: round; stroke-linejoin: round; }
+.done-check { font-size: 0; position: relative; }
+.card.empty { text-align: center; }
+.card.empty::before {
+  content: ''; display: block; width: 44px; height: 44px; margin: 0 auto 12px; border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #b8ffd4, var(--accent) 45%, var(--accent-2) 80%);
+  box-shadow: 0 0 24px rgba(46, 230, 122, 0.4);
+  opacity: 0.85;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .view { --dx: 0px; }
+  .view[data-dir='forward'] { --dx: 22px; }
+  .view[data-dir='back'] { --dx: -22px; }
+  .pane { --dx: 0px; }
+
+  /* Screens and cards: each piece floats up in turn, sliding in from the direction you moved */
+  :is(.screen, .pane, .content, .loading-center, .intro-hero, .session-panel) > :not(.topbar, .home-head, .session-top, .tabbar, .pane, .content, .loading-center, .intro-hero, .session-panel, .loading-orb, .ankle3d, .session-stage, .grid, .stack, .row, .ex-list, .goals, .done-list, .rhythm, .products, .loading-steps, .intro-points),
+  :is(.grid, .stack, .row, .ex-list, .goals, .done-list, .rhythm, .products, .loading-steps, .intro-points) > * {
+    animation: rise 0.75s var(--soft) var(--d, 0ms) backwards;
+  }
+  :is(.screen, .pane, .content, .loading-center, .intro-hero, .session-panel) > :nth-child(1) { --d: 0ms; }
+  :is(.screen, .pane, .content, .loading-center, .intro-hero, .session-panel) > :nth-child(2) { --d: 60ms; }
+  :is(.screen, .pane, .content, .loading-center, .intro-hero, .session-panel) > :nth-child(3) { --d: 120ms; }
+  :is(.screen, .pane, .content, .loading-center, .intro-hero, .session-panel) > :nth-child(4) { --d: 175ms; }
+  :is(.screen, .pane, .content, .loading-center, .intro-hero, .session-panel) > :nth-child(5) { --d: 225ms; }
+  :is(.screen, .pane, .content, .loading-center, .intro-hero, .session-panel) > :nth-child(6) { --d: 270ms; }
+  :is(.screen, .pane, .content, .loading-center, .intro-hero, .session-panel) > :nth-child(7) { --d: 310ms; }
+  :is(.screen, .pane, .content, .loading-center, .intro-hero, .session-panel) > :nth-child(8) { --d: 345ms; }
+  :is(.screen, .pane, .content, .loading-center, .intro-hero, .session-panel) > :nth-child(n + 9) { --d: 375ms; }
+  :is(.grid, .stack, .row, .ex-list, .goals, .done-list, .rhythm, .products, .loading-steps, .intro-points) > :nth-child(1) { --d: 100ms; }
+  :is(.grid, .stack, .row, .ex-list, .goals, .done-list, .rhythm, .products, .loading-steps, .intro-points) > :nth-child(2) { --d: 145ms; }
+  :is(.grid, .stack, .row, .ex-list, .goals, .done-list, .rhythm, .products, .loading-steps, .intro-points) > :nth-child(3) { --d: 190ms; }
+  :is(.grid, .stack, .row, .ex-list, .goals, .done-list, .rhythm, .products, .loading-steps, .intro-points) > :nth-child(4) { --d: 235ms; }
+  :is(.grid, .stack, .row, .ex-list, .goals, .done-list, .rhythm, .products, .loading-steps, .intro-points) > :nth-child(5) { --d: 280ms; }
+  :is(.grid, .stack, .row, .ex-list, .goals, .done-list, .rhythm, .products, .loading-steps, .intro-points) > :nth-child(6) { --d: 320ms; }
+  :is(.grid, .stack, .row, .ex-list, .goals, .done-list, .rhythm, .products, .loading-steps, .intro-points) > :nth-child(7) { --d: 355ms; }
+  :is(.grid, .stack, .row, .ex-list, .goals, .done-list, .rhythm, .products, .loading-steps, .intro-points) > :nth-child(8) { --d: 385ms; }
+  :is(.grid, .stack, .row, .ex-list, .goals, .done-list, .rhythm, .products, .loading-steps, .intro-points) > :nth-child(n + 9) { --d: 410ms; }
+  .screen > .footer { --d: 220ms; }
+  .screen > .disclaimer { --d: 300ms; }
+  .screen.intro > .footer { --d: 420ms; }
+  .session-panel > .disclaimer { --d: 0ms; }
+
+  /* Buttons that are alive: a slow sheen across the main action */
+  .btn.primary:not(:disabled) { position: relative; overflow: hidden; }
+  .btn.primary:not(:disabled)::after {
+    content: ''; position: absolute; inset: 0; pointer-events: none;
+    background: linear-gradient(100deg, transparent 32%, rgba(255, 255, 255, 0.32) 50%, transparent 68%);
+    transform: translateX(-130%);
+    animation: sheen 5s ease-in-out 1.4s infinite;
+  }
+
+  /* Selecting: checks and choices pop */
+  .choice.on .check { animation: check-pop 0.55s var(--pop); }
+  .btn.yes.on, .btn.no.on, .seg button.on { animation: select-pop 0.5s var(--spring); }
+  .zone-label .tick { animation: check-pop 0.5s var(--pop); }
+  .goals li.done .goal-box { animation: check-pop 0.55s var(--pop) 0.25s backwards; }
+  .tick-dot { display: inline-block; animation: check-pop 0.5s var(--pop) backwards; }
+  .done-list li:nth-child(1) .tick-dot { animation-delay: 0.5s; }
+  .done-list li:nth-child(2) .tick-dot { animation-delay: 0.6s; }
+  .done-list li:nth-child(3) .tick-dot { animation-delay: 0.7s; }
+  .done-list li:nth-child(n + 4) .tick-dot { animation-delay: 0.8s; }
+
+  /* Progress */
+  .dot.fresh { transform-origin: left center; animation: dot-grow 0.7s var(--soft) backwards; }
+  .pain-value span { animation: num-pop 0.4s var(--pop); }
+  .go-big .tick-num { animation: tick-in 0.35s var(--ease-out); }
+  .loading-bar span { position: relative; overflow: hidden; }
+  .loading-bar span::after {
+    content: ''; position: absolute; inset: 0 auto 0 0; width: 40%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.55), transparent);
+    animation: bar-flow 1.3s linear infinite;
+  }
+
+  /* Things that breathe */
+  .orb { transform-origin: 50% 60%; animation: orb-in 0.9s var(--pop) backwards, jelly 4.2s ease-in-out 0.9s infinite; }
+  .loading-orb { position: relative; animation: orb-in 0.9s var(--pop) backwards, jelly 3.4s ease-in-out 0.9s infinite; }
+  .loading-orb::before, .loading-orb::after {
+    content: ''; position: absolute; inset: 0; border-radius: 50%; border: 2px solid rgba(46, 230, 122, 0.5);
+    opacity: 0; animation: ring-out 2.6s var(--ease-out) infinite;
+  }
+  .loading-orb::after { animation-delay: 1.3s; }
+  .loading-steps li.done::before { display: inline-block; animation: check-pop 0.5s var(--pop); }
+  .card.empty::before { animation: float 3.2s ease-in-out infinite; }
+  .session-stage.go::after { animation: breathe 2.4s ease-in-out infinite; }
+
+  /* Moments */
+  .stage-overlay { --dx: 0px; animation: overlay-in 0.35s ease-out backwards; }
+  .overlay-label { --dx: 0px; animation: rise 0.5s var(--soft) backwards; }
+  .overlay-count { animation: count-pop 0.6s var(--pop) backwards; }
+  .path-card { --dx: 0px; animation: rise 0.55s var(--soft) backwards; }
+  .result-title, .big-date { --dx: 0px; animation: rise 0.7s var(--soft) 0.2s backwards; }
+  .result-badge { display: inline-block; animation: pop-in 0.6s var(--pop) 0.1s backwards; }
+  .done-check { animation: pop-in 0.8s var(--pop) 0.1s backwards; }
+  .done-check path { stroke-dasharray: 24; stroke-dashoffset: 24; animation: draw 0.5s var(--ease-out) 0.45s forwards; }
+  .done-check::before, .done-check::after {
+    content: ''; position: absolute; inset: 0; border-radius: 50%; border: 2px solid var(--accent);
+    opacity: 0; animation: ring-out 1.4s var(--ease-out) 0.35s;
+  }
+  .done-check::after { animation-delay: 0.6s; }
+}

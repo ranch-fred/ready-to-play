@@ -33,7 +33,7 @@ export function CheckIn({ partId, onBack, onSubmit }) {
           <p className="question">{q.question}</p>
           {q.type === 'scale' ? (
             <div className="pain">
-              <div className={`pain-value p${answers.pain}`}>{touchedPain ? answers.pain : '–'}</div>
+              <div className={`pain-value p${answers.pain}`}>{touchedPain ? <span key={answers.pain}>{answers.pain}</span> : '–'}</div>
               <input
                 type="range"
                 min="0"

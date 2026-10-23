@@ -80,6 +80,7 @@ export function Home({ profile, injury, onNewInjury, onCheckIn, onUpdateInjury, 
         <p className="hello">{profile?.name ? `Hi ${profile.name}` : `Day ${day}`}</p>
       </header>
 
+      <div className="pane" key={tab}>
       {tab === 'home' && (
         <>
           <div className="home-title">
@@ -177,14 +178,16 @@ export function Home({ profile, injury, onNewInjury, onCheckIn, onUpdateInjury, 
           {plan ? (
             <PathMap partId={injury.partId} total={plan.projected} current={phase.index} startDate={injury.date} answers={today?.lastAnswers} today={today} />
           ) : (
-            <div className="card"><p>Your path appears once your plan starts.</p></div>
+            <div className="card empty"><p>Your path appears once your plan starts.</p></div>
           )}
         </>
       )}
+      </div>
 
       <p className="disclaimer">{rules.meta.disclaimer}</p>
 
-      <nav className="tabbar" aria-label="Sections">
+      <nav className="tabbar" aria-label="Sections" style={{ '--tab': Math.max(0, TABS.findIndex((t) => t.id === tab)) }}>
+        <span className="tab-pill" aria-hidden="true" />
         {TABS.map((t) => (
           <button key={t.id} className={tab === t.id ? 'on' : ''} aria-current={tab === t.id ? 'page' : undefined} onClick={() => { setTab(t.id); window.scrollTo(0, 0) }}>
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={t.icon} /></svg>
@@ -201,7 +204,7 @@ function TodayTab({ today, checkedToday, onCheckIn, onStart }) {
     return (
       <>
         <h1 className="title">Today</h1>
-        <div className="card"><p>Your exercises start once a doctor has checked the injury.</p></div>
+        <div className="card empty"><p>Your exercises start once a doctor has checked the injury.</p></div>
       </>
     )
   }

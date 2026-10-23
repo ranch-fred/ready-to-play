@@ -104,7 +104,7 @@ export function SelfTest({ test, index, total, side, onAnswer, onBack }) {
       )}
       {test.type === 'scale' ? (
         <div className="pain">
-          <div className={`pain-value p${Math.min(pain, 10)}`}>{pain}</div>
+          <div className={`pain-value p${Math.min(pain, 10)}`}><span key={pain}>{pain}</span></div>
           <input
             type="range"
             min="0"
